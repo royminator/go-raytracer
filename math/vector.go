@@ -5,7 +5,7 @@ import (
 )
 
 type (
-	Vec4 struct { X, Y, Z, W float64 }
+	Vec4 [4]float64
 )
 
 const (
@@ -24,28 +24,41 @@ func Vec4With(v float64) Vec4 {
 	return Vec4{v, v, v, v}
 }
 
-func (lhs *Vec4) Add(rhs Vec4) Vec4 {
-	return Vec4{lhs.X+rhs.X, lhs.Y+rhs.Y, lhs.Z+rhs.Z, lhs.W+rhs.W}
+func (lhs Vec4) Add(rhs Vec4) Vec4 {
+	return Vec4{lhs[0]+rhs[0], lhs[1]+rhs[1], lhs[2]+rhs[2], lhs[3]+rhs[3]}
 }
 
-func (lhs *Vec4) Sub(rhs Vec4) Vec4 {
-	return Vec4{lhs.X-rhs.X, lhs.Y-rhs.Y, lhs.Z-rhs.Z, lhs.W-rhs.W}
+func (lhs Vec4) Sub(rhs Vec4) Vec4 {
+	return Vec4{lhs[0]-rhs[0], lhs[1]-rhs[1], lhs[2]-rhs[2], lhs[3]-rhs[3]}
 }
 
-func (v *Vec4) Mul(x float64) Vec4 {
-	return Vec4{v.X*x, v.Y*x, v.Z*x, v.W*x}
+func (v Vec4) Mul(x float64) Vec4 {
+	return Vec4{v[0]*x, v[1]*x, v[2]*x, v[3]*x}
 }
 
-func (v *Vec4) Div(x float64) Vec4 {
-	return Vec4{v.X/x, v.Y/x, v.Z/x, v.W/x}
+func (v Vec4) Div(x float64) Vec4 {
+	return Vec4{v[0]/x, v[1]/x, v[2]/x, v[3]/x}
 }
 
-func (v *Vec4) Negate() Vec4 {
+func (v Vec4) Negate() Vec4 {
 	return v.Mul(-1)
 }
 
-func (v *Vec4) Magnitude() float64 {
-	return math.Sqrt(v.X*v.X + v.Y*v.Y + v.Z*v.Z + v.W*v.W)
+func (v Vec4) Magnitude() float64 {
+	return math.Sqrt(v[0]*v[0] + v[1]*v[1] + v[2]*v[2] + v[3]*v[3])
+}
+
+func (v Vec4) Normalize() Vec4 {
+	return v.Div(v.Magnitude())
+}
+
+func (lhs Vec4) Approx(rhs Vec4) bool {
+	for i := range lhs {
+		if !eqApprox(lhs[i], rhs[i]) {
+			return false
+		}
+	}
+	return true
 }
 
 func eqApprox(a, b float64) bool {

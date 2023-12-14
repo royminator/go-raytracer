@@ -71,13 +71,13 @@ func TestScalarMul(t *testing.T) {
 
 func TestScalarMulFrac(t *testing.T) {
 	expected := Vec4{0.5, -1, 1.5, -2}
-	actual := (&Vec4{1, -2, 3, -4}).Mul(0.5)
+	actual := Vec4{1, -2, 3, -4}.Mul(0.5)
 	checkResult(expected, actual, t)
 }
 
 func TestScalarDiv(t *testing.T) {
 	expected := Vec4{0.5, -1, 1.5, -2}
-	actual := (&Vec4{1, -2, 3, -4}).Div(2)
+	actual := Vec4{1, -2, 3, -4}.Div(2)
 	checkResult(expected, actual, t)
 }
 
@@ -92,6 +92,29 @@ func TestMagn(t *testing.T) {
 	}
 	for _, c := range cases {
 		checkResult(c.res, c.vec.Magnitude(), t)
+	}
+}
+
+func TestNormalize(t *testing.T) {
+	type testCase struct {vec Vec4; res Vec4}
+	cases := []testCase{
+		{Vector4(4, 0, 0), Vector4(1, 0, 0)},
+		{Vector4(1, 2, 3), Vector4(0.26726, 0.53452, 0.80178)},
+	}
+
+	for _, c := range cases {
+		actual := c.vec.Normalize()
+		if !actual.Approx(c.res) {
+			t.Errorf("Expected approx %v, got %v", c.res, actual)
+		}
+	}
+}
+
+func TestMagnitudeOfNormalizedVecIs1(t *testing.T) {
+	norm := Vec4{1, 2, 3, 0}.Normalize()
+	actual := norm.Magnitude()
+	if actual != 1.0 {
+		t.Errorf("Expected %f, got %f", 1.0, actual) 
 	}
 }
 
