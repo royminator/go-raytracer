@@ -8,13 +8,13 @@ import (
 func TestCreatPointWShouldBe1(t *testing.T) {
 	actual := Point4(4, -4, 3)
 	expected := Vec4{4, -4, 3, 1}
-	checkResult(expected, actual, t)
+	assertEqual(expected, actual, t)
 }
 
 func TestCreateVectorWShouldBe0(t *testing.T) {
 	actual := Vector4(4, -4, 3)
 	expected := Vec4{4, -4, 3, 0}
-	checkResult(expected, actual, t)
+	assertEqual(expected, actual, t)
 }
 
 func TestAddVec4(t *testing.T) {
@@ -22,7 +22,7 @@ func TestAddVec4(t *testing.T) {
 	a2 := Vec4{-2, 3, 1, 0}
 	expected := Vec4{1, 1, 6, 1}
 	actual := a1.Add(a2)
-	checkResult(expected, actual, t)
+	assertEqual(expected, actual, t)
 }
 
 func TestSubPoints(t *testing.T) {
@@ -30,7 +30,7 @@ func TestSubPoints(t *testing.T) {
 	a2 := Point4(5, 6, 7)
 	expected := Vector4(-2, -4, -6)
 	actual := a1.Sub(a2)
-	checkResult(expected, actual, t)
+	assertEqual(expected, actual, t)
 }
 
 func TestSubVecFromPoint(t *testing.T) {
@@ -38,7 +38,7 @@ func TestSubVecFromPoint(t *testing.T) {
 	a2 := Vector4(5, 6, 7)
 	expected := Point4(-2, -4, -6)
 	actual := a1.Sub(a2)
-	checkResult(expected, actual, t)
+	assertEqual(expected, actual, t)
 }
 
 func TestSubVectors(t *testing.T) {
@@ -46,7 +46,7 @@ func TestSubVectors(t *testing.T) {
 	a2 := Vector4(5, 6, 7)
 	expected := Vector4(-2, -4, -6)
 	actual := a1.Sub(a2)
-	checkResult(expected, actual, t)
+	assertEqual(expected, actual, t)
 }
 
 func TestSubFromZeroVec(t *testing.T) {
@@ -54,31 +54,31 @@ func TestSubFromZeroVec(t *testing.T) {
 	v := Vector4(1, -2, 3)
 	expected := Vector4(-1, 2, -3)
 	actual := zero.Sub(v)
-	checkResult(expected, actual, t)
+	assertEqual(expected, actual, t)
 }
 
 func TestNegate(t *testing.T) {
 	expected := Vec4{1, -2, 3, -4}
 	actual := (&Vec4{-1, 2, -3, 4}).Negate()
-	checkResult(expected, actual, t)
+	assertEqual(expected, actual, t)
 }
 
 func TestScalarMul(t *testing.T) {
 	expected := Vec4{3.5, -7, 10.5, -14}
 	actual := (&Vec4{1, -2, 3, -4}).Mul(3.5)
-	checkResult(expected, actual, t)
+	assertEqual(expected, actual, t)
 }
 
 func TestScalarMulFrac(t *testing.T) {
 	expected := Vec4{0.5, -1, 1.5, -2}
 	actual := Vec4{1, -2, 3, -4}.Mul(0.5)
-	checkResult(expected, actual, t)
+	assertEqual(expected, actual, t)
 }
 
 func TestScalarDiv(t *testing.T) {
 	expected := Vec4{0.5, -1, 1.5, -2}
 	actual := Vec4{1, -2, 3, -4}.Div(2)
-	checkResult(expected, actual, t)
+	assertEqual(expected, actual, t)
 }
 
 func TestMagn(t *testing.T) {
@@ -91,7 +91,7 @@ func TestMagn(t *testing.T) {
 		{Vector4(-1, -2, -3), math.Sqrt(14)},
 	}
 	for _, c := range cases {
-		checkResult(c.res, c.vec.Magnitude(), t)
+		assertEqual(c.res, c.vec.Magnitude(), t)
 	}
 }
 
@@ -118,18 +118,26 @@ func TestMagnitudeOfNormalizedVecIs1(t *testing.T) {
 }
 
 func TestDotProduct(t *testing.T) {
-	checkResult(20.0, Vector4(1, 2, 3).Dot(Vector4(2, 3, 4)), t)
+	assertEqual(20.0, Vector4(1, 2, 3).Dot(Vector4(2, 3, 4)), t)
 }
 
 func TestCrossProduct(t *testing.T) {
 	a := Vector4(1, 2, 3)
 	b := Vector4(2, 3, 4)
-	checkResult(Vector4(-1, 2, -1), a.Cross(b), t)
-	checkResult(Vector4(1, -2, 1), b.Cross(a), t)
+	assertEqual(Vector4(-1, 2, -1), a.Cross(b), t)
+	assertEqual(Vector4(1, -2, 1), b.Cross(a), t)
+}
+
+func TestMulElem(t *testing.T) {
+	expected := Vector4(0.9, 0.2, 0.04)
+	actual := Vector4(1, 0.2, 0.4).MulElem(Vector4(0.9, 1, 0.1))
+	if !expected.ApproxEqual(actual) {
+		t.Errorf("Expected %v, got %v", expected, actual)
+	}
 }
 
 /////////////////////// HELPERS /////////////////////// 
-func checkResult(expected, actual interface{}, t *testing.T) {
+func assertEqual(expected, actual interface{}, t *testing.T) {
 	if expected != actual {
 		t.Errorf("Expected %v, got %v", expected, actual)
 	}

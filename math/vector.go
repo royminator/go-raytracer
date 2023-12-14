@@ -20,16 +20,30 @@ func Vector4(x, y, z float64) Vec4 {
 	return Vec4{x, y, z, 0.0}
 }
 
+func Color4(r, g, b, a float64) Vec4 {
+	return Vec4{r, g, b, a}
+}
+
 func Vec4With(v float64) Vec4 {
 	return Vec4{v, v, v, v}
 }
 
 func (lhs Vec4) Add(rhs Vec4) Vec4 {
-	return Vec4{lhs[0]+rhs[0], lhs[1]+rhs[1], lhs[2]+rhs[2], lhs[3]+rhs[3]}
+	return Vec4{
+		lhs[0]+rhs[0],
+		lhs[1]+rhs[1],
+		lhs[2]+rhs[2],
+		lhs[3]+rhs[3],
+	}
 }
 
 func (lhs Vec4) Sub(rhs Vec4) Vec4 {
-	return Vec4{lhs[0]-rhs[0], lhs[1]-rhs[1], lhs[2]-rhs[2], lhs[3]-rhs[3]}
+	return Vec4{
+		lhs[0]-rhs[0],
+		lhs[1]-rhs[1],
+		lhs[2]-rhs[2],
+		lhs[3]-rhs[3],
+	}
 }
 
 func (v Vec4) Mul(x float64) Vec4 {
@@ -73,7 +87,15 @@ func (lhs Vec4) Cross(rhs Vec4) Vec4 {
 	)
 }
 
+func (lhs Vec4) MulElem(rhs Vec4) Vec4 {
+	return Vec4{
+		lhs[0]*rhs[0],
+		lhs[1]*rhs[1],
+		lhs[2]*rhs[2],
+		lhs[3]*rhs[3],
+	}
+}
+
 func eqApprox(a, b float64) bool {
 	return math.Abs(a - b) < EPSILON
 }
-
