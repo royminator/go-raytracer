@@ -74,9 +74,6 @@ func (lhs Vec4) Cross(rhs Vec4) Vec4 {
 }
 
 func eqApprox(a, b float64) bool {
-	if math.Abs(a - b) < EPSILON {
-		return true
-	}
-	return false
+	return math.Abs(a - b) < EPSILON
 }
 
