@@ -104,18 +104,28 @@ func TestNormalize(t *testing.T) {
 
 	for _, c := range cases {
 		actual := c.vec.Normalize()
-		if !actual.Approx(c.res) {
+		if !actual.ApproxEqual(c.res) {
 			t.Errorf("Expected approx %v, got %v", c.res, actual)
 		}
 	}
 }
 
 func TestMagnitudeOfNormalizedVecIs1(t *testing.T) {
-	norm := Vec4{1, 2, 3, 0}.Normalize()
-	actual := norm.Magnitude()
+	actual := Vector4(1, 2, 3).Normalize().Magnitude()
 	if actual != 1.0 {
 		t.Errorf("Expected %f, got %f", 1.0, actual) 
 	}
+}
+
+func TestDotProduct(t *testing.T) {
+	checkResult(20.0, Vector4(1, 2, 3).Dot(Vector4(2, 3, 4)), t)
+}
+
+func TestCrossProduct(t *testing.T) {
+	a := Vector4(1, 2, 3)
+	b := Vector4(2, 3, 4)
+	checkResult(Vector4(-1, 2, -1), a.Cross(b), t)
+	checkResult(Vector4(1, -2, 1), b.Cross(a), t)
 }
 
 /////////////////////// HELPERS /////////////////////// 

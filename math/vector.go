@@ -52,13 +52,25 @@ func (v Vec4) Normalize() Vec4 {
 	return v.Div(v.Magnitude())
 }
 
-func (lhs Vec4) Approx(rhs Vec4) bool {
+func (lhs Vec4) ApproxEqual(rhs Vec4) bool {
 	for i := range lhs {
 		if !eqApprox(lhs[i], rhs[i]) {
 			return false
 		}
 	}
 	return true
+}
+
+func (lhs Vec4) Dot(rhs Vec4) float64 {
+	return lhs[0]*rhs[0]+lhs[1]*rhs[1]+lhs[2]*rhs[2]+lhs[3]*rhs[3]
+}
+
+func (lhs Vec4) Cross(rhs Vec4) Vec4 {
+	return Vector4(
+		lhs[1]*rhs[2]-lhs[2]*rhs[1],
+		lhs[2]*rhs[0]-lhs[0]*rhs[2],
+		lhs[0]*rhs[1]-lhs[1]*rhs[0],
+	)
 }
 
 func eqApprox(a, b float64) bool {
