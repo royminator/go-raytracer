@@ -29,28 +29,52 @@ func TestCanvasWritePixel(t *testing.T) {
 	assertEqual(expected, actual, t)
 }
 
-func TestCanvasPPMHeader(t *testing.T) {
-	expected := lines("P3\n5 3\n255\n", 0, 2)
-	actual := lines(NewCanvas(5, 3, ColorBlack).ToPPM(), 0, 2)
-	if expected != actual {
-		t.Errorf("Expected %s, got %s", expected, actual)
+func TestPPMWriterHeader(t *testing.T) {
+	expected := lines("P3\n5 3\n255")
+	c := NewCanvas(5, 3, ColorBlack)
+	ppmWriter := PPMWriter{}
+	ppmWriter.Write(c)
+	actual := lines(ppmWriter.Ppm)[0:3]
+	assertEqual(len(expected), len(actual), t)
+	for i := range expected {
+		assertEqual(expected[i], actual[i], t)
 	}
 }
 
-func TestCanvasPPMPixelData(t *testing.T) {
-	expected := `255 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+func TestPPMWriterPixelData(t *testing.T) {
+	expected := lines(`255 0 0 0 0 0 0 0 0 0 0 0 0 0 0
 0 0 0 0 0 0 0 128 0 0 0 0 0 0 0
-0 0 0 0 0 0 0 0 0 0 0 0 0 0 255`
+0 0 0 0 0 0 0 0 0 0 0 0 0 0 255`)
 
 	c := NewCanvas(5, 3, ColorBlack)
 	c.WritePixel(0, 0, m.Color4(1.5, 0, 0, 0))
 	c.WritePixel(2, 1, m.Color4(0, 0.5, 0, 0))
 	c.WritePixel(4, 2, m.Color4(-0.5, 0, 1, 0))
 
-	actual := lines(c.ToPPM(), 3, 6)
+	ppmWriter := PPMWriter{}
+	ppmWriter.Write(c)
+	actual := lines(ppmWriter.Ppm)[3:6]
 
-	if expected != actual {
-		t.Errorf("Expected %s, got %s", []byte(expected), []byte(actual))
+	assertEqual(len(expected), len(actual), t)
+	for i := range expected {
+		assertEqual(expected[i], actual[i], t)
+	}
+}
+
+func TestCanvasPPMWriterPixelDataMax70CharPerLine(t *testing.T) {
+	expected := lines(`255 204 153 255 204 153 255 204 153 255 204 153 255 204 153 255 204
+153 255 204 153 255 204 153 255 204 153 255 204 153
+255 204 153 255 204 153 255 204 153 255 204 153 255 204 153 255 204
+153 255 204 153 255 204 153 255 204 153 255 204 153`)
+
+	c := NewCanvas(10, 2, m.Color4(1, 0.8, 0.6, 0.0))
+	ppmWriter := PPMWriter{}
+	ppmWriter.Write(c)
+	actual := lines(ppmWriter.Ppm)[3:7]
+
+	assertEqual(len(expected), len(actual), t)
+	for i := range expected {
+		assertEqual(expected[i]+";", actual[i]+";", t)
 	}
 }
 
@@ -61,14 +85,6 @@ func assertEqual(expected, actual interface{}, t *testing.T) {
 	}
 }
 
-func lines(text string, from, to int) string {
-	ls := strings.Split(text, "\n")
-	var res string
-	for i := from; i < to; i++ {
-		res += ls[i]
-		if i != to - 1 {
-			res += "\n"
-		}
-	}
-	return res
+func lines(text string) []string {
+	return strings.Split(text, "\n")
 }
