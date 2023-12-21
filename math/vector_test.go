@@ -3,18 +3,19 @@ package math
 import (
 	"math"
 	"testing"
+	"github.com/stretchr/testify/assert"
 )
 
 func TestCreatPointWShouldBe1(t *testing.T) {
 	actual := Point4(4, -4, 3)
 	expected := Vec4{4, -4, 3, 1}
-	assertEqual(expected, actual, t)
+	assert.Equal(t, expected, actual)
 }
 
 func TestCreateVectorWShouldBe0(t *testing.T) {
 	actual := Vector4(4, -4, 3)
 	expected := Vec4{4, -4, 3, 0}
-	assertEqual(expected, actual, t)
+	assert.Equal(t, expected, actual)
 }
 
 func TestAddVec4(t *testing.T) {
@@ -22,7 +23,7 @@ func TestAddVec4(t *testing.T) {
 	a2 := Vec4{-2, 3, 1, 0}
 	expected := Vec4{1, 1, 6, 1}
 	actual := a1.Add(a2)
-	assertEqual(expected, actual, t)
+	assert.Equal(t, expected, actual)
 }
 
 func TestSubPoints(t *testing.T) {
@@ -30,7 +31,7 @@ func TestSubPoints(t *testing.T) {
 	a2 := Point4(5, 6, 7)
 	expected := Vector4(-2, -4, -6)
 	actual := a1.Sub(a2)
-	assertEqual(expected, actual, t)
+	assert.Equal(t, expected, actual)
 }
 
 func TestSubVecFromPoint(t *testing.T) {
@@ -38,7 +39,7 @@ func TestSubVecFromPoint(t *testing.T) {
 	a2 := Vector4(5, 6, 7)
 	expected := Point4(-2, -4, -6)
 	actual := a1.Sub(a2)
-	assertEqual(expected, actual, t)
+	assert.Equal(t, expected, actual)
 }
 
 func TestSubVectors(t *testing.T) {
@@ -46,7 +47,7 @@ func TestSubVectors(t *testing.T) {
 	a2 := Vector4(5, 6, 7)
 	expected := Vector4(-2, -4, -6)
 	actual := a1.Sub(a2)
-	assertEqual(expected, actual, t)
+	assert.Equal(t, expected, actual)
 }
 
 func TestSubFromZeroVec(t *testing.T) {
@@ -54,31 +55,31 @@ func TestSubFromZeroVec(t *testing.T) {
 	v := Vector4(1, -2, 3)
 	expected := Vector4(-1, 2, -3)
 	actual := zero.Sub(v)
-	assertEqual(expected, actual, t)
+	assert.Equal(t, expected, actual)
 }
 
 func TestNegate(t *testing.T) {
 	expected := Vec4{1, -2, 3, -4}
 	actual := (&Vec4{-1, 2, -3, 4}).Negate()
-	assertEqual(expected, actual, t)
+	assert.Equal(t, expected, actual)
 }
 
 func TestScalarMul(t *testing.T) {
 	expected := Vec4{3.5, -7, 10.5, -14}
 	actual := (&Vec4{1, -2, 3, -4}).Mul(3.5)
-	assertEqual(expected, actual, t)
+	assert.Equal(t, expected, actual)
 }
 
 func TestScalarMulFrac(t *testing.T) {
 	expected := Vec4{0.5, -1, 1.5, -2}
 	actual := Vec4{1, -2, 3, -4}.Mul(0.5)
-	assertEqual(expected, actual, t)
+	assert.Equal(t, expected, actual)
 }
 
 func TestScalarDiv(t *testing.T) {
 	expected := Vec4{0.5, -1, 1.5, -2}
 	actual := Vec4{1, -2, 3, -4}.Div(2)
-	assertEqual(expected, actual, t)
+	assert.Equal(t, expected, actual)
 }
 
 func TestMagn(t *testing.T) {
@@ -91,11 +92,11 @@ func TestMagn(t *testing.T) {
 		{Vector4(-1, -2, -3), math.Sqrt(14)},
 	}
 	for _, c := range cases {
-		assertEqual(c.res, c.vec.Magnitude(), t)
+		assert.Equal(t, c.vec.Magnitude(), c.res)
 	}
 }
 
-func TestNormalize(t *testing.T) {
+func TestVec4Normalize(t *testing.T) {
 	type testCase struct {vec Vec4; res Vec4}
 	cases := []testCase{
 		{Vector4(4, 0, 0), Vector4(1, 0, 0)},
@@ -104,41 +105,30 @@ func TestNormalize(t *testing.T) {
 
 	for _, c := range cases {
 		actual := c.vec.Normalize()
-		if !actual.ApproxEqual(c.res) {
-			t.Errorf("Expected approx %v, got %v", c.res, actual)
-		}
+		assert.True(t, actual.ApproxEqual(c.res))
 	}
 }
 
-func TestMagnitudeOfNormalizedVecIs1(t *testing.T) {
+func TestVec4MagnitudeOfNormalizedVecIs1(t *testing.T) {
 	actual := Vector4(1, 2, 3).Normalize().Magnitude()
-	if actual != 1.0 {
-		t.Errorf("Expected %f, got %f", 1.0, actual) 
-	}
+	assert.Equal(t, 1.0, actual)
 }
 
 func TestDotProduct(t *testing.T) {
-	assertEqual(20.0, Vector4(1, 2, 3).Dot(Vector4(2, 3, 4)), t)
+	assert.Equal(t, 20.0, Vector4(1, 2, 3).Dot(Vector4(2, 3, 4)))
 }
 
 func TestCrossProduct(t *testing.T) {
 	a := Vector4(1, 2, 3)
 	b := Vector4(2, 3, 4)
-	assertEqual(Vector4(-1, 2, -1), a.Cross(b), t)
-	assertEqual(Vector4(1, -2, 1), b.Cross(a), t)
+	assert.Equal(t, Vector4(-1, 2, -1), a.Cross(b))
+	assert.Equal(t, Vector4(1, -2, 1), b.Cross(a))
 }
 
 func TestMulElem(t *testing.T) {
 	expected := Vector4(0.9, 0.2, 0.04)
 	actual := Vector4(1, 0.2, 0.4).MulElem(Vector4(0.9, 1, 0.1))
 	if !expected.ApproxEqual(actual) {
-		t.Errorf("Expected %v, got %v", expected, actual)
-	}
-}
-
-/////////////////////// HELPERS /////////////////////// 
-func assertEqual(expected, actual interface{}, t *testing.T) {
-	if expected != actual {
 		t.Errorf("Expected %v, got %v", expected, actual)
 	}
 }
