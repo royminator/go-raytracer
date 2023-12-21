@@ -85,6 +85,31 @@ func (m1 Mat4) Mat4Sub(m2 Mat4) Mat4 {
 	return m1
 }
 
-func (_ Mat4) Index(m, n int) int {
+func (mat Mat4) Index(m, n int) int {
 	return 4*m + n
+}
+
+func (m1 Mat4) Mul(m2 Mat4) Mat4 {
+	var res Mat4
+	for m := 0; m < 4; m++ {
+		for n := 0; n < 4; n++ {
+			v := m1.At(m, 0)*m2.At(0, n)+
+				m1.At(m, 1)*m2.At(1, n)+
+				m1.At(m, 2)*m2.At(2, n)+
+				m1.At(m, 3)*m2.At(3, n)
+			res.Set(m, n, v)
+		}
+	}
+	return res
+}
+
+func (mat Mat4) MulVec(vec Vec4) Vec4 {
+	var res Vec4
+	for m := 0; m < 4; m++ {
+		res[m] = mat.At(m, 0)*vec[0]+
+			mat.At(m, 1)*vec[1]+
+			mat.At(m, 2)*vec[2]+
+			mat.At(m, 3)*vec[3]
+	}
+	return res
 }

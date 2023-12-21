@@ -112,3 +112,37 @@ func TestMat4Sub(t *testing.T) {
 	actual := m1.Mat4Sub(m2)
 	assert.Equal(t, expected, actual)
 }
+
+func TestMat4Mul(t *testing.T) {
+	expected := Mat4FromRows(
+		Vec4{20, 22, 50, 48},
+		Vec4{44, 54, 114, 108},
+		Vec4{40, 58, 110, 102},
+		Vec4{16, 26, 46, 42},
+	)
+	a := Mat4FromRows(
+		Vec4{1, 2, 3, 4},
+		Vec4{5, 6, 7, 8},
+		Vec4{9, 8, 7, 6},
+		Vec4{5, 4, 3, 2},
+	)
+	b := Mat4FromRows(
+		Vec4{-2, 1, 2, 3},
+		Vec4{3, 2, 1, -1},
+		Vec4{4, 3, 6, 5},
+		Vec4{1, 2, 7, 8},
+	)
+	assert.Equal(t, expected, a.Mul(b))
+}
+
+func TestMat4MulVec(t *testing.T) {
+	expected := Vec4{18, 24, 33, 1}
+	a := Mat4FromRows(
+		Vec4{1, 2, 3, 4},
+		Vec4{2, 4, 4, 2},
+		Vec4{8, 6, 4, 1},
+		Vec4{0, 0, 0, 1},
+	)
+	b := Vec4{1, 2, 3, 1}
+	assert.Equal(t, expected, a.MulVec(b))
+}
