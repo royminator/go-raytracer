@@ -5,6 +5,35 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+// //////////////////////////// MAT2 //////////////////////////////
+func TestMat2FromRows(t *testing.T) {
+	mat := Mat2FromRows(
+		Vec2{-3, 5},
+		Vec2{1, -2},
+	)
+
+	assert := assert.New(t)
+	assert.Equal(-3.0, mat.At(0, 0))
+	assert.Equal(5.0, mat.At(0, 1))
+	assert.Equal(1.0, mat.At(1, 0))
+	assert.Equal(-2.0, mat.At(1, 1))
+}
+
+// //////////////////////////// MAT3 //////////////////////////////
+func TestMat3FromRows(t *testing.T) {
+	mat := Mat3FromRows(
+		Vec3{-3, 5, 0},
+		Vec3{1, -2, -7},
+		Vec3{0, 1, 1},
+	)
+
+	assert := assert.New(t)
+	assert.Equal(-3.0, mat.At(0, 0))
+	assert.Equal(-2.0, mat.At(1, 1))
+	assert.Equal(1.0, mat.At(2, 2))
+}
+
+// //////////////////////////// MAT4 //////////////////////////////
 func TestMat4FromRows(t *testing.T) {
 	mat := Mat4FromRows(
 		Vec4{1, 2, 3, 4},
@@ -57,7 +86,7 @@ func TestMat4Add(t *testing.T) {
 		Vec4{-13, 2, -8, 0},
 		Vec4{0, 12, -6, 8},
 	)
-	actual := m1.Mat4Add(m2)
+	actual := m1.Add(m2)
 	assert.Equal(t, expected, actual)
 }
 

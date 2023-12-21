@@ -1,9 +1,37 @@
 package math
 
 type (
+	Mat2 [4]float64
+	Mat3 [9]float64
 	Mat4 [16]float64
 )
 
+// //////////////////////////// MAT2 //////////////////////////////
+func Mat2FromRows(m0, m1 Vec2) Mat2 {
+	return Mat2{
+		m0[0], m0[1],
+		m1[0], m1[1],
+	}
+}
+
+func (mat Mat2) At(m, n int) float64 {
+	return mat[2*m+n]
+}
+
+// //////////////////////////// MAT3 //////////////////////////////
+func Mat3FromRows(m0, m1, m2 Vec3) Mat3 {
+	return Mat3{
+		m0[0], m0[1], m0[2],
+		m1[0], m1[1], m1[2],
+		m2[0], m2[1], m2[2],
+	}
+}
+
+func (mat Mat3) At(m, n int) float64 {
+	return mat[3*m+n]
+}
+
+// //////////////////////////// MAT4 //////////////////////////////
 func Mat4FromRows(m0, m1, m2, m3 Vec4) Mat4 {
 	return Mat4{
 		m0[0], m0[1], m0[2], m0[3],
@@ -24,10 +52,10 @@ func Mat4Ident() Mat4 {
 
 func Mat4Diag(v Vec4) Mat4 {
 	return Mat4FromRows(
-		Vec4{v[0], 0, 0 ,0},
-		Vec4{0, v[1], 0 ,0},
-		Vec4{0, 0, v[2] ,0},
-		Vec4{0, 0, 0 ,v[3]},
+		Vec4{v[0], 0, 0, 0},
+		Vec4{0, v[1], 0, 0},
+		Vec4{0, 0, v[2], 0},
+		Vec4{0, 0, 0, v[3]},
 	)
 }
 
@@ -35,10 +63,14 @@ func (mat Mat4) At(m, n int) float64 {
 	return mat[4*m+n]
 }
 
-func (m1 Mat4) Mat4Add(m2 Mat4) Mat4 {
+func (mat *Mat4) Set(m, n int, v float64) {
+	mat[4*m+n] = v
+}
+
+func (m1 Mat4) Add(m2 Mat4) Mat4 {
 	for m := 0; m < 4; m++ {
 		for n := 0; n < 4; n++ {
-			m1[mat4Index(m, n)] = m1.At(m, n)+m2.At(m, n)
+			m1.Set(m, n, m1.At(m, n)+m2.At(m, n))
 		}
 	}
 	return m1
@@ -47,12 +79,12 @@ func (m1 Mat4) Mat4Add(m2 Mat4) Mat4 {
 func (m1 Mat4) Mat4Sub(m2 Mat4) Mat4 {
 	for m := 0; m < 4; m++ {
 		for n := 0; n < 4; n++ {
-			m1[mat4Index(m, n)] = m1.At(m, n)-m2.At(m, n)
+			m1.Set(m, n, m1.At(m, n)-m2.At(m, n))
 		}
 	}
 	return m1
 }
 
-func mat4Index(m, n int) int {
-	return 4*m+n
+func (_ Mat4) Index(m, n int) int {
+	return 4*m + n
 }

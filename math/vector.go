@@ -5,6 +5,8 @@ import (
 )
 
 type (
+	Vec2 [2]float64
+	Vec3 [3]float64
 	Vec4 [4]float64
 )
 
