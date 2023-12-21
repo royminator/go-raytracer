@@ -80,7 +80,8 @@ func (w *PPMWriter) Write(c *Canvas) {
 }
 
 func (w *PPMWriter) WriteHeader(c *Canvas) {
-	w.Header = fmt.Sprintf("%s\n%d %d\n%d", PPMFormat, c.Width, c.Height, PPMMaxColor)
+	w.Header = fmt.Sprintf("%s\n%d %d\n%d",
+		PPMFormat, c.Width, c.Height, PPMMaxColor)
 }
 
 func (w *PPMWriter) WritePixelData(c *Canvas) {
