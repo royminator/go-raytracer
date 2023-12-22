@@ -1,6 +1,7 @@
 package gfx
 
 import (
+	"fmt"
 	"strings"
 	"testing"
 
@@ -34,7 +35,7 @@ func TestPPMWriterHeader(t *testing.T) {
 	c := NewCanvas(5, 3, ColorBlack)
 	ppmWriter := PPMWriter{}
 	ppmWriter.Write(c)
-	actual := lines(ppmWriter.Ppm)[0:3]
+	actual := lines(string(ppmWriter.Ppm))[0:3]
 	assertEqual(len(expected), len(actual), t)
 	for i := range expected {
 		assertEqual(expected[i], actual[i], t)
@@ -53,7 +54,8 @@ func TestPPMWriterPixelData(t *testing.T) {
 
 	ppmWriter := PPMWriter{}
 	ppmWriter.Write(c)
-	actual := lines(ppmWriter.Ppm)[3:6]
+	fmt.Println(string(ppmWriter.Ppm))
+	actual := lines(string(ppmWriter.Ppm))[3:5]
 
 	assertEqual(len(expected), len(actual), t)
 	for i := range expected {
@@ -70,7 +72,7 @@ func TestCanvasPPMWriterPixelDataMax70CharPerLine(t *testing.T) {
 	c := NewCanvas(10, 2, m.Color4(1, 0.8, 0.6, 0.0))
 	ppmWriter := PPMWriter{}
 	ppmWriter.Write(c)
-	actual := lines(ppmWriter.Ppm)[3:7]
+	actual := lines(string(ppmWriter.Ppm))[3:7]
 
 	assertEqual(len(expected), len(actual), t)
 	for i := range expected {

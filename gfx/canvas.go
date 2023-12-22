@@ -16,11 +16,10 @@ type (
 	}
 
 	PPMWriter struct {
-		Header    string
+		Header    []byte
 		Pixels []byte
-		Ppm       string
-		buf       string
-		m, n uint32
+		Ppm       []byte
+		m, n, i uint32
 		nBytes uint32
 		lastNewline uint32
 		cursor uint32
@@ -79,13 +78,13 @@ func (w *PPMWriter) Write(c *Canvas) {
 	w.WriteHeader(c)
 	w.WritePixelData(c)
 	w.Ppm = w.Header
-	w.Ppm += "\n"
-	w.Ppm += w.PixelData
+	w.Ppm = append(w.Ppm, byte('\n'))
+	w.Ppm = append(w.Ppm, w.Pixels...)
 }
 
 func (w *PPMWriter) WriteHeader(c *Canvas) {
-	w.Header = fmt.Sprintf("%s\n%d %d\n%d",
-		PPMFormat, c.Width, c.Height, PPMMaxColor)
+	w.Header = []byte(fmt.Sprintf("%s\n%d %d\n%d",
+		PPMFormat, c.Width, c.Height, PPMMaxColor))
 }
 
 func (w *PPMWriter) WritePixelData(c *Canvas) {
@@ -95,17 +94,29 @@ func (w *PPMWriter) WritePixelData(c *Canvas) {
 	for w.m = 0; w.m < c.Height; w.m++ {
 		for w.n = 0; w.n < c.Width; w.n++ {
 			color := c.Pixels[w.m][w.n]
-			for w.i := 0; w.i < 3; w.i++ {
+			for w.i = 0; w.i < 3; w.i++ {
 				colorStr := floatToPpm(color[w.i], PPMMaxColor)
-				sep := w.getSeparator()
-				w.insertInfoBuffer([]byte(colorStr + sep))
+				sep := w.getSeparator(colorStr, c.Width)
+				w.insertIntoBuffer([]byte(colorStr + sep))
 			}
 		}
 	}
 }
 
-func (w *PPMWriter) getSeparator(colorStr string) {
-		
+func (w *PPMWriter) insertIntoBuffer(bytes []byte) {
+	start, end :=w.cursor, w.cursor+uint32(len(bytes))
+	copy(w.Pixels[start:end], bytes)
+	if bytes[len(bytes)-1] == byte('\n') {
+		w.lastNewline = end
+	}
+	w.cursor = end
+}
+
+func (w *PPMWriter) getSeparator(colorStr string, width uint32) string {
+	if w.isNewline(colorStr, width) {
+		return "\n"
+	}
+	return " "
 }
 
 func (w *PPMWriter) isNewline(colorStr string, width uint32) bool {
@@ -119,57 +130,6 @@ func (w *PPMWriter) CalcBytes(c *Canvas) {
 	nColors := nPixels*3
 	nChars := nColors*4
 	w.nBytes = nChars
-}
-
-func (w *PPMWriter) newlineIfLineTooLong(color string) bool {
-	if len(w.buf)+len(color)+1 > PPMMaxCharsPerLine {
-		w.addLine()
-		return true
-	}
-	return false
-}
-
-func (w *PPMWriter) addLine() {
-	w.PixelData += w.buf + "\n"
-	w.buf = ""
-}
-
-func (w *PPMWriter) addColorToLine(color m.Vec4, c *Canvas) {
-	for i := 0; i < 3; i++ {
-		colorStr := floatToPpm(color[i], PPMMaxColor)
-		w.newlineIfLineTooLong(colorStr)
-		w.buf += colorStr
-		if w.shouldAddSpace(i, c) {
-			w.buf += " "
-		}
-	}
-}
-
-func (w *PPMWriter) shouldAddSpace(colorIndex int, c *Canvas) bool {
-	isLastColorOnLine := (colorIndex == 2) && (w.n == c.Width-1)
-	nextColorFitsOnLine := w.getNextColor(colorIndex, c)
-	if !isLastColorOnLine && nextColorFitsOnLine {
-		return true
-	}
-	return false
-}
-
-func (w *PPMWriter) getNextColor(colorIndex int, c *Canvas) bool {
-	var m, n, i uint32
-	isNextPixel := colorIndex == 2
-	if isNextPixel {
-		i = 0
-		n = w.n+1
-	}
-	if n >= c.Width {
-		n = 0
-		m = w.m+1
-	}
-	if m >= c.Height {
-		return false
-	}
-	nextColorStr := floatToPpm(c.Pixels[m][n][i], PPMMaxColor)
-	return len(w.buf)+len(nextColorStr)+1 <= PPMMaxCharsPerLine
 }
 
 func (w *PPMWriter) SaveFile(filePath string) {
