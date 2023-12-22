@@ -17,10 +17,13 @@ type (
 
 	PPMWriter struct {
 		Header    string
-		PixelData string
+		Pixels []byte
 		Ppm       string
 		buf       string
 		m, n uint32
+		nBytes uint32
+		lastNewline uint32
+		cursor uint32
 	}
 )
 
@@ -86,12 +89,36 @@ func (w *PPMWriter) WriteHeader(c *Canvas) {
 }
 
 func (w *PPMWriter) WritePixelData(c *Canvas) {
+	w.CalcBytes(c)
+	w.Pixels = make([]byte, w.nBytes)
+
 	for w.m = 0; w.m < c.Height; w.m++ {
 		for w.n = 0; w.n < c.Width; w.n++ {
-			w.addColorToLine(c.Pixels[w.m][w.n], c)
+			color := c.Pixels[w.m][w.n]
+			for w.i := 0; w.i < 3; w.i++ {
+				colorStr := floatToPpm(color[w.i], PPMMaxColor)
+				sep := w.getSeparator()
+				w.insertInfoBuffer([]byte(colorStr + sep))
+			}
 		}
-		w.addLine()
 	}
+}
+
+func (w *PPMWriter) getSeparator(colorStr string) {
+		
+}
+
+func (w *PPMWriter) isNewline(colorStr string, width uint32) bool {
+	isTooLong := w.cursor+uint32(len(colorStr))-w.lastNewline > PPMMaxCharsPerLine
+	isEndOfRow := w.m == width-1
+	return isTooLong || isEndOfRow
+}
+
+func (w *PPMWriter) CalcBytes(c *Canvas) {
+	nPixels := c.Height*c.Width
+	nColors := nPixels*3
+	nChars := nColors*4
+	w.nBytes = nChars
 }
 
 func (w *PPMWriter) newlineIfLineTooLong(color string) bool {
@@ -145,6 +172,6 @@ func (w *PPMWriter) getNextColor(colorIndex int, c *Canvas) bool {
 	return len(w.buf)+len(nextColorStr)+1 <= PPMMaxCharsPerLine
 }
 
-func (w *PPMWriter) SaveFile() {
-	os.WriteFile("scene.ppm", []byte(w.Ppm), 0644)
+func (w *PPMWriter) SaveFile(filePath string) {
+	os.WriteFile(filePath, []byte(w.Ppm), 0644)
 }
