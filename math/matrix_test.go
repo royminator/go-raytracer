@@ -19,6 +19,15 @@ func TestMat2FromRows(t *testing.T) {
 	assert.Equal(-2.0, mat.At(1, 1))
 }
 
+func TestMat2Det(t *testing.T) {
+	expected := 17.0
+	a := Mat2FromRows(
+		Vec2{1, 5},
+		Vec2{-3, 2},
+	)
+	assert.Equal(t, expected, a.Det())
+}
+
 // //////////////////////////// MAT3 //////////////////////////////
 func TestMat3FromRows(t *testing.T) {
 	mat := Mat3FromRows(
@@ -31,6 +40,24 @@ func TestMat3FromRows(t *testing.T) {
 	assert.Equal(-3.0, mat.At(0, 0))
 	assert.Equal(-2.0, mat.At(1, 1))
 	assert.Equal(1.0, mat.At(2, 2))
+}
+
+func TestMat3SubMat(t *testing.T) {
+	type testData struct { i, j int; res Mat2 }
+	td := []testData{
+		{0, 0, Mat2{2, 7, 6, -3}},
+		{0, 1, Mat2{-3, 7, 0, -3}},
+		{2, 2, Mat2{1, 5, -3, 2}},
+	}
+	a := Mat3FromRows(
+		Vec3{1, 5, 0},
+		Vec3{-3, 2, 7},
+		Vec3{0, 6, -3},
+	)
+	assert := assert.New(t)
+	for _, d := range td {
+		assert.Equal(d.res, a.SubMat(d.i, d.j))
+	}
 }
 
 // //////////////////////////// MAT4 //////////////////////////////
@@ -145,4 +172,127 @@ func TestMat4MulVec(t *testing.T) {
 	)
 	b := Vec4{1, 2, 3, 1}
 	assert.Equal(t, expected, a.MulVec(b))
+}
+
+func TestMat4MulIdentity(t *testing.T) {
+	expected := Mat4FromRows(
+		Vec4{-2, 1, 2, 3},
+		Vec4{3, 2, 1, -1},
+		Vec4{4, 3, 6, 5},
+		Vec4{1, 2, 7, 8},
+	)
+	assert.Equal(t, expected, expected.Mul(Mat4Ident()))
+}
+
+func TestMat4Tpose(t *testing.T) {
+	expected := Mat4FromRows(
+		Vec4{0, 9, 1, 0},
+		Vec4{9, 8, 8, 0},
+		Vec4{3, 0, 5, 5},
+		Vec4{0, 8, 3, 8},
+	)
+	a := Mat4FromRows(
+		Vec4{0, 9, 3, 0},
+		Vec4{9, 8, 0, 8},
+		Vec4{1, 8, 5, 3},
+		Vec4{0, 0, 5, 8},
+	)
+	assert.Equal(t, expected, a.Tpose())
+}
+
+func TestMat4TposeIdentity(t *testing.T) {
+	assert.Equal(t, Mat4Ident(), Mat4Ident().Tpose())
+}
+
+func TestMat4SubMat(t *testing.T) {
+	type testData struct { i, j int; res Mat3 }
+	td := []testData{
+		{0, 0, Mat3FromRows(
+			Vec3{2, 7, 0},
+			Vec3{6, -3, 4},
+			Vec3{5, 6, -7},
+		)},
+		{0, 1, Mat3FromRows(
+			Vec3{-3, 7, 0},
+			Vec3{0, -3, 4},
+			Vec3{0, 6, -7},
+		)},
+		{3, 3, Mat3FromRows(
+			Vec3{1, 5, 0},
+			Vec3{-3, 2, 7},
+			Vec3{0, 6, -3},
+		)},
+	}
+	a := Mat4FromRows(
+		Vec4{1, 5, 0, 6},
+		Vec4{-3, 2, 7, 0},
+		Vec4{0, 6, -3, 4},
+		Vec4{0, 5, 6, -7},
+	)
+	assert := assert.New(t)
+	for _, d := range td {
+		assert.Equal(d.res, a.SubMat(d.i, d.j))
+	}
+}
+
+func TestMat4DeleteRow(t *testing.T) {
+	type testData struct { i int; res Mat3x4 }
+	td := []testData{
+		{0, Mat3x4{
+			-3, 2, 7, 0,
+			0, 6, -3, 4,
+			0, 5, 6, -7,
+		}},
+		{1, Mat3x4{
+			1, 5, 0, 6,
+			0, 6, -3, 4,
+			0, 5, 6, -7,
+		}},
+		{3, Mat3x4{
+			1, 5, 0, 6,
+			-3, 2, 7, 0,
+			0, 6, -3, 4,
+		}},
+	}
+	a := Mat4FromRows(
+		Vec4{1, 5, 0, 6},
+		Vec4{-3, 2, 7, 0},
+		Vec4{0, 6, -3, 4},
+		Vec4{0, 5, 6, -7},
+	)
+	assert := assert.New(t)
+	for _, d := range td {
+		assert.Equal(d.res, a.DeleteRow(d.i))
+	}
+}
+
+// //////////////////////////// MAT3x4 //////////////////////////////
+func TestMat3x4DeleteCol(t *testing.T) {
+	type testData struct { i int; res Mat3 }
+	td := []testData{
+		{0, Mat3FromRows(
+			Vec3{5, 0, 6},
+			Vec3{2, 7, 0},
+			Vec3{6, -3, 4},
+		)},
+		{1, Mat3FromRows(
+			Vec3{1, 0, 6},
+			Vec3{-3, 7, 0},
+			Vec3{0, -3, 4},
+		)},
+		{3, Mat3FromRows(
+			Vec3{1, 5, 0},
+			Vec3{-3, 2, 7},
+			Vec3{0, 6, -3},
+		)},
+	}
+	a := Mat3x4{
+		1, 5, 0, 6,
+		-3, 2, 7, 0,
+		0, 6, -3, 4,
+	}
+	assert := assert.New(t)
+	for _, d := range td {
+		assert.Equal(d.res, a.DeleteCol(d.i))
+	}
 }
