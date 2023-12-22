@@ -60,6 +60,30 @@ func TestMat3SubMat(t *testing.T) {
 	}
 }
 
+func TestMat3Minor(t *testing.T) {
+	a := Mat3FromRows(
+		Vec3{3, 5, 0},
+		Vec3{2, -1, -7},
+		Vec3{6, -1, 5},
+	)
+	actual := a.Minor(1, 0)
+	assert.Equal(t, a.SubMat(1, 0).Det(), actual)
+	assert.Equal(t, 25.0, actual)
+}
+
+func TestMat3Cofactor(t *testing.T) {
+	a := Mat3FromRows(
+		Vec3{3, 5, 0},
+		Vec3{2, -1, -7},
+		Vec3{6, -1, 5},
+	)
+	assert := assert.New(t)
+	assert.Equal(-12.0, a.Minor(0, 0))
+	assert.Equal(-12.0, a.Cofactor(0, 0))
+	assert.Equal(25.0, a.Minor(1, 0))
+	assert.Equal(-25.0, a.Cofactor(1, 0))
+}
+
 // //////////////////////////// MAT4 //////////////////////////////
 func TestMat4FromRows(t *testing.T) {
 	mat := Mat4FromRows(

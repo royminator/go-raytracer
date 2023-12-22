@@ -85,6 +85,18 @@ func (mat Mat3) Row(m int) Vec3 {
 	return Vec3{mat.At(m, 0), mat.At(m, 1), mat.At(m, 2)}
 }
 
+func (mat Mat3) Minor(m, n int) float64 {
+	return mat.SubMat(m, n).Det()
+}
+
+func (mat Mat3) Cofactor(m, n int) float64 {
+	var sign float64 = -1
+	if (m + n) % 2 == 0 {
+		sign = 1
+	}
+	return mat.Minor(m, n)*sign
+}
+
 // //////////////////////////// MAT4 //////////////////////////////
 func Mat4FromRows(m0, m1, m2, m3 Vec4) Mat4 {
 	return Mat4{
