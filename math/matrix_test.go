@@ -318,6 +318,52 @@ func TestMat4Det(t *testing.T) {
 	assert.Equal(-4071.0, a.Det())
 }
 
+func TestMat4IsInvertible(t *testing.T) {
+	type testData struct {mat Mat4; res bool}
+	td := []testData{
+		{ Mat4FromRows(
+			Vec4{6, 4, 4, 4},
+			Vec4{5, 5, 7, 6},
+			Vec4{4, -9, 3, -7},
+			Vec4{9, 1, 7, -6},
+		), true },
+		{ Mat4FromRows(
+			Vec4{-4, 2, -2, -3},
+			Vec4{9, 6, 2, 6},
+			Vec4{0, -5, 1, -5},
+			Vec4{0, 0, 0, 0},
+		), false },
+	}
+	for _, d := range td {
+		isInv, _ := d.mat.IsInvertible()
+		assert.Equal(t, d.res, isInv)
+	}
+}
+
+func TestMat4Inverse(t *testing.T) {
+	a := Mat4FromRows(
+		Vec4{-5, 2, 6, -8},
+		Vec4{1, -5, 1, 8},
+		Vec4{7, 7, -6, -7},
+		Vec4{1, -3, 7, 4},
+	)
+	b := a.Inv()
+	bExpected := Mat4FromRows(
+		Vec4{0.21805, 0.45113, 0.24060, -0.04511},
+		Vec4{-0.80827, -1.45677, -0.44361, 0.52068},
+		Vec4{-0.07895, -0.22368, -0.05263, 0.19737},
+		Vec4{-0.52256, -0.81391, -0.30075, 0.30639},
+	)
+
+	assert := assert.New(t)
+	assert.Equal(532.0, a.Det())
+	assert.Equal(-160.0, a.Cofactor(2, 3))
+	assert.Equal(-160.0/532.0, b.At(3, 2))
+	assert.Equal(105.0, a.Cofactor(3, 2))
+	assert.Equal(105.0/532.0, b.At(2, 3))
+	assert.True(bExpected.ApproxEqual(b))
+}
+
 // //////////////////////////// MAT3x4 //////////////////////////////
 func TestMat3x4DeleteCol(t *testing.T) {
 	type testData struct { i int; res Mat3 }

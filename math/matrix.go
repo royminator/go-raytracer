@@ -236,6 +236,37 @@ func (mat Mat4) Det() float64 {
 		mat.At(0, 3)*mat.Cofactor(0, 3)
 }
 
+func (mat Mat4) IsInvertible() (bool, float64) {
+	det := mat.Det()
+	return !eqApprox(det, 0.0), det
+}
+
+func (mat Mat4) Inv() Mat4 {
+	isInvertible, det := mat.IsInvertible()
+	if !isInvertible {
+		panic("matrix not invertible")
+	}
+
+	var res Mat4
+	for m := 0; m < 4; m++ {
+		for n := 0; n < 4; n++ {
+			res.Set(n, m, mat.Cofactor(m, n)/det)
+		}
+	}
+	return res
+}
+
+func (m1 Mat4) ApproxEqual(m2 Mat4) bool {
+	for m := 0; m < 4; m++ {
+		for n := 0; n < 4; n++ {
+			if !eqApprox(m1.At(m, n), m2.At(m, n)) {
+				return false
+			}
+		}
+	}
+	return true
+}
+
 // //////////////////////////// MAT2x3 //////////////////////////////
 func (mat Mat2x3) DeleteCol(col int) Mat2 {
 	cols := make([]Vec2, 2)
