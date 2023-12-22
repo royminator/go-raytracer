@@ -3,6 +3,7 @@ package gfx
 import (
 	"fmt"
 	"math"
+	"os"
 
 	m "roytracer/math"
 )
@@ -137,11 +138,13 @@ func (w *PPMWriter) getNextColor(colorIndex int, c *Canvas) bool {
 		n = 0
 		m = w.m+1
 	}
-
 	if m >= c.Height {
 		return false
 	}
 	nextColorStr := floatToPpm(c.Pixels[m][n][i], PPMMaxColor)
-
 	return len(w.buf)+len(nextColorStr)+1 <= PPMMaxCharsPerLine
+}
+
+func (w *PPMWriter) SaveFile() {
+	os.WriteFile("scene.ppm", []byte(w.Ppm), 0644)
 }
