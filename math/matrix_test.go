@@ -364,6 +364,55 @@ func TestMat4Inverse(t *testing.T) {
 	assert.True(bExpected.ApproxEqual(b))
 }
 
+func TestMat4MoreInverse(t *testing.T) {
+	type testData struct {mat Mat4; res Mat4}
+	td := []testData{
+		{ Mat4FromRows(
+			Vec4{8 ,-5, 9, 2},
+			Vec4{7, 5, 6, 1},
+			Vec4{-6, 0, 9, 6},
+			Vec4{-3, 0, -9, -4},
+		), Mat4FromRows(
+			Vec4{-0.15385, -0.15385, -0.28205, -0.53846},
+			Vec4{-0.07692, 0.12308, 0.02564, 0.03077},
+			Vec4{0.35897, 0.35897, 0.43590, 0.92308},
+			Vec4{-0.69231, -0.69231, -0.76923, -1.92308},
+		)},
+		{ Mat4FromRows(
+			Vec4{9, 3, 0, 9},
+			Vec4{-5, -2, -6, -3},
+			Vec4{-4, 9, 6, 4},
+			Vec4{-7, 6, 6, 2},
+		), Mat4FromRows(
+			Vec4{-0.04074, -0.07778, 0.14444, -0.22222},
+			Vec4{-0.07778, 0.03333, 0.36667, -0.33333},
+			Vec4{-0.02901, -0.14630, -0.10926, 0.12963},
+			Vec4{0.17778, 0.06667, -0.26667, 0.33333},
+		)},
+	}
+
+	for _, d := range td {
+		assert.True(t, d.mat.Inv().ApproxEqual(d.res))
+	}
+}
+
+func TestMat4InverseMultiplication(t *testing.T) {
+	a := Mat4FromRows(
+		Vec4{3, -9, 7, 3},
+		Vec4{3, -8, 2, -9},
+		Vec4{-4, 4, 4, 1},
+		Vec4{-6, 5, -1, 1},
+	)
+	b := Mat4FromRows(
+		Vec4{8, 2, 2, 2},
+		Vec4{3, -1, 7, 0},
+		Vec4{7, 0, 5, 4},
+		Vec4{6, -2, 0, 5},
+	)
+	c := a.Mul(b)
+	assert.True(t, c.Mul(b.Inv()).ApproxEqual(a))
+}
+
 // //////////////////////////// MAT3x4 //////////////////////////////
 func TestMat3x4DeleteCol(t *testing.T) {
 	type testData struct { i int; res Mat3 }
