@@ -97,6 +97,12 @@ func (mat Mat3) Cofactor(m, n int) float64 {
 	return mat.Minor(m, n)*sign
 }
 
+func (mat Mat3) Det() float64 {
+	return mat.At(0, 0)*mat.Cofactor(0, 0)+
+		mat.At(0, 1)*mat.Cofactor(0, 1)+
+		mat.At(0, 2)*mat.Cofactor(0, 2)
+}
+
 // //////////////////////////// MAT4 //////////////////////////////
 func Mat4FromRows(m0, m1, m2, m3 Vec4) Mat4 {
 	return Mat4{
@@ -213,6 +219,21 @@ func (mat Mat4) DeleteRow(row int) Mat3x4 {
 
 func (mat Mat4) Row(m int) Vec4 {
 	return Vec4{mat.At(m, 0), mat.At(m, 1), mat.At(m, 2), mat.At(m, 3)}
+}
+
+func (mat Mat4) Cofactor(m, n int) float64 {
+	var sign = -1.0
+	if (m + n) % 2 == 0 {
+		sign = 1.0
+	}
+	return sign*mat.SubMat(m, n).Det()
+}
+
+func (mat Mat4) Det() float64 {
+	return mat.At(0, 0)*mat.Cofactor(0, 0)+
+		mat.At(0, 1)*mat.Cofactor(0, 1)+
+		mat.At(0, 2)*mat.Cofactor(0, 2)+
+		mat.At(0, 3)*mat.Cofactor(0, 3)
 }
 
 // //////////////////////////// MAT2x3 //////////////////////////////

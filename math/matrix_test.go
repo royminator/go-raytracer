@@ -84,6 +84,19 @@ func TestMat3Cofactor(t *testing.T) {
 	assert.Equal(-25.0, a.Cofactor(1, 0))
 }
 
+func TestMat3Det(t *testing.T) {
+	a := Mat3FromRows(
+		Vec3{1, 2, 6},
+		Vec3{-5, 8, -4},
+		Vec3{2, 6, 4},
+	)
+	assert := assert.New(t)
+	assert.Equal(56.0, a.Cofactor(0, 0))
+	assert.Equal(12.0, a.Cofactor(0, 1))
+	assert.Equal(-46.0, a.Cofactor(0, 2))
+	assert.Equal(-196.0, a.Det())
+}
+
 // //////////////////////////// MAT4 //////////////////////////////
 func TestMat4FromRows(t *testing.T) {
 	mat := Mat4FromRows(
@@ -288,6 +301,21 @@ func TestMat4DeleteRow(t *testing.T) {
 	for _, d := range td {
 		assert.Equal(d.res, a.DeleteRow(d.i))
 	}
+}
+
+func TestMat4Det(t *testing.T) {
+	a := Mat4FromRows(
+		Vec4{-2, -8, 3, 5},
+		Vec4{-3, 1, 7, 3},
+		Vec4{1, 2, -9, 6},
+		Vec4{-6, 7, 7, -9},
+	)
+	assert := assert.New(t)
+	assert.Equal(690.0, a.Cofactor(0, 0))
+	assert.Equal(447.0, a.Cofactor(0, 1))
+	assert.Equal(210.0, a.Cofactor(0, 2))
+	assert.Equal(51.0, a.Cofactor(0, 3))
+	assert.Equal(-4071.0, a.Det())
 }
 
 // //////////////////////////// MAT3x4 //////////////////////////////
