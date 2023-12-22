@@ -1,9 +1,9 @@
 package gfx
 
 import (
-	"fmt"
 	"strings"
 	"testing"
+	"github.com/stretchr/testify/assert"
 
 	m "roytracer/math"
 )
@@ -11,12 +11,13 @@ import (
 func TestNewCanvasIsAllBlack(t *testing.T) {
 	c := NewCanvas(10, 20, ColorBlack)
 
-	assertEqual(uint32(10), c.Width, t)
-	assertEqual(uint32(20), c.Height, t)
+	assert := assert.New(t)
+	assert.Equal(uint32(10), c.Width)
+	assert.Equal(uint32(20), c.Height)
 
 	for i := range c.Pixels {
 		for j := range c.Pixels[i] {
-			assertEqual(c.Pixels[i][j], ColorBlack, t)
+			assert.Equal(c.Pixels[i][j], ColorBlack)
 		}
 	}
 }
@@ -27,18 +28,18 @@ func TestCanvasWritePixel(t *testing.T) {
 	c.WritePixel(j, i, ColorRed)
 	expected := ColorRed
 	actual := c.Pixels[i][j]
-	assertEqual(expected, actual, t)
+	assert.Equal(t, expected, actual)
 }
 
 func TestPPMWriterHeader(t *testing.T) {
 	expected := lines("P3\n5 3\n255")
 	c := NewCanvas(5, 3, ColorBlack)
-	ppmWriter := PPMWriter{}
+	ppmWriter := PPMWriter{MaxLineLength: 70}
 	ppmWriter.Write(c)
 	actual := lines(string(ppmWriter.Ppm))[0:3]
-	assertEqual(len(expected), len(actual), t)
+	assert.Equal(t, len(expected), len(actual))
 	for i := range expected {
-		assertEqual(expected[i], actual[i], t)
+		assert.Equal(t, expected[i], actual[i])
 	}
 }
 
@@ -52,14 +53,13 @@ func TestPPMWriterPixelData(t *testing.T) {
 	c.WritePixel(2, 1, m.Color4(0, 0.5, 0, 0))
 	c.WritePixel(4, 2, m.Color4(-0.5, 0, 1, 0))
 
-	ppmWriter := PPMWriter{}
+	ppmWriter := PPMWriter{MaxLineLength: 70}
 	ppmWriter.Write(c)
-	fmt.Println(string(ppmWriter.Ppm))
-	actual := lines(string(ppmWriter.Ppm))[3:5]
+	actual := lines(string(ppmWriter.Ppm))[3:6]
 
-	assertEqual(len(expected), len(actual), t)
+	assert.Equal(t, len(expected), len(actual))
 	for i := range expected {
-		assertEqual(expected[i], actual[i], t)
+		assert.Equal(t, expected[i], actual[i])
 	}
 }
 
@@ -70,23 +70,34 @@ func TestCanvasPPMWriterPixelDataMax70CharPerLine(t *testing.T) {
 153 255 204 153 255 204 153 255 204 153 255 204 153`)
 
 	c := NewCanvas(10, 2, m.Color4(1, 0.8, 0.6, 0.0))
-	ppmWriter := PPMWriter{}
+	ppmWriter := PPMWriter{MaxLineLength: 70}
 	ppmWriter.Write(c)
 	actual := lines(string(ppmWriter.Ppm))[3:7]
 
-	assertEqual(len(expected), len(actual), t)
+	assert.Equal(t, len(expected), len(actual))
 	for i := range expected {
-		assertEqual(expected[i]+";", actual[i]+";", t)
+		assert.Equal(t, expected[i], actual[i])
 	}
+}
+
+func TestPPWWriterShouldInsertNewlineAtLinesEnd(t *testing.T) {
+	c := NewCanvas(3, 2, ColorBlack)
+	w := PPMWriter{MaxLineLength: 70}
+	w.Write(c)
+	assert := assert.New(t)
+	assert.Equal(byte('\n'), w.Pixels[17])
+	assert.Equal(byte('\n'), w.Pixels[35])
+}
+
+func TestPPWWriterShouldInsertNewlineWhenTooLong(t *testing.T) {
+	c := NewCanvas(1, 2, ColorBlack)
+	w := PPMWriter{MaxLineLength: 5}
+	w.Write(c)
+	assert := assert.New(t)
+	assert.Equal(byte('\n'), w.Pixels[5])
 }
 
 // ///////////////////// HELPERS ///////////////////////
-func assertEqual(expected, actual interface{}, t *testing.T) {
-	if expected != actual {
-		t.Errorf("Expected %v, got %v", expected, actual)
-	}
-}
-
 func lines(text string) []string {
 	return strings.Split(text, "\n")
 }
