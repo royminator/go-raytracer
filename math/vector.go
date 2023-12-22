@@ -98,6 +98,10 @@ func (lhs Vec4) MulElem(rhs Vec4) Vec4 {
 	}
 }
 
+func (v Vec3) ToVec4() Vec4 {
+	return Vec4{v[0], v[1], v[2], 1}
+}
+
 func eqApprox(a, b float64) bool {
 	return math.Abs(a - b) < EPSILON
 }

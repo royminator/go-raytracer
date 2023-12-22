@@ -267,6 +267,13 @@ func (m1 Mat4) ApproxEqual(m2 Mat4) bool {
 	return true
 }
 
+func (m *Mat4) SetCol(n int, col Vec4) {
+	m.Set(0, n, col[0])
+	m.Set(1, n, col[1])
+	m.Set(2, n, col[2])
+	m.Set(3, n, col[3])
+}
+
 // //////////////////////////// MAT2x3 //////////////////////////////
 func (mat Mat2x3) DeleteCol(col int) Mat2 {
 	cols := make([]Vec2, 2)
