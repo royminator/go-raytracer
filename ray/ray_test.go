@@ -28,7 +28,7 @@ func TestComputePointOnRay(t *testing.T) {
 
 func TestSphereIntersection(t *testing.T) {
 	ray := Ray{m.Point4(0, 0, -5), m.Vector4(0, 0, 1)}
-	isect := Sphere{}.Intersect(ray)
+	isect := NewSphere().Intersect(ray)
 	fmt.Println(isect)
 	assert := assert.New(t)
 	assert.True(isect.IsIntersect)
@@ -38,7 +38,7 @@ func TestSphereIntersection(t *testing.T) {
 
 func TestSphereIntersectionAtTangent(t *testing.T) {
 	ray := Ray{m.Point4(0, 1, -5), m.Vector4(0, 0, 1)}
-	isect := Sphere{}.Intersect(ray)
+	isect := NewSphere().Intersect(ray)
 	assert := assert.New(t)
 	assert.True(isect.IsIntersect)
 	assert.Equal(5.0, isect.D1)
@@ -47,15 +47,18 @@ func TestSphereIntersectionAtTangent(t *testing.T) {
 
 func TestSphereIntersectionRayMisses(t *testing.T) {
 	ray := Ray{m.Point4(0, 2, -5), m.Vector4(0, 0, 1)}
-	isect := Sphere{}.Intersect(ray)
+	isect := NewSphere().Intersect(ray)
 	assert.False(t, isect.IsIntersect)
 }
 
 func TestSphereIntersectionRayBehindSphere(t *testing.T) {
 	ray := Ray{m.Point4(0, 0, 5), m.Vector4(0, 0, 1)}
-	isect := Sphere{}.Intersect(ray)
-	assert := assert.New(t)
-	assert.True(isect.IsIntersect)
-	assert.Equal(-6.0, isect.D1)
-	assert.Equal(-4.0, isect.D2)
+	isect := NewSphere().Intersect(ray)
+	assert.Equal(t, Intersection{true, -6.0, -4.0}, isect)
+}
+
+func TestSphereIntersectRayInsideSphere(t *testing.T) {
+	ray := Ray{m.Point4(0, 0, 0), m.Vector4(0, 0, 1)}
+	isect := NewSphere().Intersect(ray)
+	assert.Equal(t, Intersection{true, -1.0, 1.0}, isect)
 }

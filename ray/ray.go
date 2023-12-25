@@ -3,6 +3,7 @@ package ray
 import (
 	"math"
 
+	"github.com/google/uuid"
 	m "roytracer/math"
 )
 
@@ -15,6 +16,7 @@ type (
 	Sphere struct {
 		Radius float64
 		Center m.Vec4
+		Id     uuid.UUID
 	}
 
 	Intersection struct {
@@ -43,4 +45,8 @@ func (s Sphere) Intersect(r Ray) Intersection {
 		return Intersection{true, t1, t2}
 	}
 	return Intersection{true, t2, t1}
+}
+
+func NewSphere() Sphere {
+	return Sphere{0, m.Vector4(0, 0, 0), uuid.New()}
 }
