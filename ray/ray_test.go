@@ -1,7 +1,6 @@
 package ray
 
 import (
-	"fmt"
 	"testing"
 
 	m "roytracer/math"
@@ -29,36 +28,41 @@ func TestComputePointOnRay(t *testing.T) {
 func TestSphereIntersection(t *testing.T) {
 	ray := Ray{m.Point4(0, 0, -5), m.Vector4(0, 0, 1)}
 	isect := NewSphere().Intersect(ray)
-	fmt.Println(isect)
 	assert := assert.New(t)
-	assert.True(isect.IsIntersect)
-	assert.Equal(4.0, isect.D1)
-	assert.Equal(6.0, isect.D2)
+	assert.Equal(2, len(isect.T))
+	assert.Equal(4.0, isect.T[0])
+	assert.Equal(6.0, isect.T[1])
 }
 
 func TestSphereIntersectionAtTangent(t *testing.T) {
 	ray := Ray{m.Point4(0, 1, -5), m.Vector4(0, 0, 1)}
 	isect := NewSphere().Intersect(ray)
 	assert := assert.New(t)
-	assert.True(isect.IsIntersect)
-	assert.Equal(5.0, isect.D1)
-	assert.Equal(5.0, isect.D2)
+	assert.Equal(2, len(isect.T))
+	assert.Equal(5.0, isect.T[0])
+	assert.Equal(5.0, isect.T[0])
 }
 
 func TestSphereIntersectionRayMisses(t *testing.T) {
 	ray := Ray{m.Point4(0, 2, -5), m.Vector4(0, 0, 1)}
 	isect := NewSphere().Intersect(ray)
-	assert.False(t, isect.IsIntersect)
+	assert.Equal(t, 0, len(isect.T))
 }
 
 func TestSphereIntersectionRayBehindSphere(t *testing.T) {
 	ray := Ray{m.Point4(0, 0, 5), m.Vector4(0, 0, 1)}
 	isect := NewSphere().Intersect(ray)
-	assert.Equal(t, Intersection{true, -6.0, -4.0}, isect)
+	assert := assert.New(t)
+	assert.Equal(2, len(isect.T))
+	assert.Equal(-6.0, isect.T[0])
+	assert.Equal(-4.0, isect.T[1])
 }
 
 func TestSphereIntersectRayInsideSphere(t *testing.T) {
 	ray := Ray{m.Point4(0, 0, 0), m.Vector4(0, 0, 1)}
 	isect := NewSphere().Intersect(ray)
-	assert.Equal(t, Intersection{true, -1.0, 1.0}, isect)
+	assert := assert.New(t)
+	assert.Equal(2, len(isect.T))
+	assert.Equal(-1.0, isect.T[0])
+	assert.Equal(1.0, isect.T[1])
 }

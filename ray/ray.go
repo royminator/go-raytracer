@@ -20,9 +20,8 @@ type (
 	}
 
 	Intersection struct {
-		IsIntersect bool
-		D1          float64
-		D2          float64
+		T  []float64
+		Id uuid.UUID
 	}
 )
 
@@ -37,14 +36,14 @@ func (s Sphere) Intersect(r Ray) Intersection {
 	c := sphereToRay.Dot(sphereToRay) - 1
 	discriminant := b*b - 4*a*c
 	if discriminant < 0 {
-		return Intersection{IsIntersect: false}
+		return Intersection{Id: s.Id}
 	}
 	t1 := (-b - math.Sqrt(discriminant)) / (2 * a)
 	t2 := (-b + math.Sqrt(discriminant)) / (2 * a)
 	if t1 < t2 {
-		return Intersection{true, t1, t2}
+		return Intersection{Id: s.Id, T: []float64{t1, t2}}
 	}
-	return Intersection{true, t2, t1}
+	return Intersection{Id: s.Id, T: []float64{t2, t1}}
 }
 
 func NewSphere() Sphere {
