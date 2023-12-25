@@ -14,38 +14,69 @@ type (
 	}
 
 	Sphere struct {
-		Radius float64
-		Center m.Vec4
 		Id     uuid.UUID
+		Tf m.Mat4
 	}
 
 	Intersection struct {
-		T  []float64
+		T  float64
 		Id uuid.UUID
 	}
 )
 
+//////////////// RAY //////////////// 
 func (r Ray) Pos(t float64) m.Vec4 {
 	return r.Origin.Add(r.Dir.Mul(t))
 }
 
-func (s Sphere) Intersect(r Ray) Intersection {
+func (r Ray) Transform(tf m.Mat4) Ray {
+	origin := tf.MulVec(r.Origin)
+	dir := tf.MulVec(r.Dir)
+	return Ray{Origin: origin, Dir: dir}
+}
+
+//////////////// SPHERE //////////////// 
+func (s Sphere) Intersect(r Ray) []Intersection {
+	r = r.Transform(s.Tf.Inv())
 	sphereToRay := r.Origin.Sub(m.Point4(0, 0, 0))
 	a := r.Dir.Dot(r.Dir)
 	b := 2 * r.Dir.Dot(sphereToRay)
 	c := sphereToRay.Dot(sphereToRay) - 1
 	discriminant := b*b - 4*a*c
 	if discriminant < 0 {
-		return Intersection{Id: s.Id}
+		return []Intersection{}
 	}
 	t1 := (-b - math.Sqrt(discriminant)) / (2 * a)
 	t2 := (-b + math.Sqrt(discriminant)) / (2 * a)
 	if t1 < t2 {
-		return Intersection{Id: s.Id, T: []float64{t1, t2}}
+		return []Intersection{
+			{Id: s.Id, T: t1},
+			{Id: s.Id, T: t2},
+		}
 	}
-	return Intersection{Id: s.Id, T: []float64{t2, t1}}
+	return []Intersection{
+		{Id: s.Id, T: t2},
+		{Id: s.Id, T: t1},
+	}
 }
 
 func NewSphere() Sphere {
-	return Sphere{0, m.Vector4(0, 0, 0), uuid.New()}
+	return Sphere{Tf: m.Mat4Ident(), Id: uuid.New()}
+}
+
+//////////////// INTERSECTIONS //////////////// 
+func Intersections(isects ...Intersection) []Intersection {
+	return isects
+}
+
+func Hit(isects []Intersection) (Intersection, bool) {
+	res := Intersection{T: math.MaxFloat64}
+	isHit := false
+	for _, isect := range isects {
+		if isect.T <= res.T && isect.T >= 0 {
+			res = Intersection{Id: isect.Id, T: isect.T}
+			isHit = true
+		}
+	}
+	return res, isHit
 }
