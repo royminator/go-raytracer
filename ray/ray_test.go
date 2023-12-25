@@ -32,8 +32,8 @@ func TestSphereIntersection(t *testing.T) {
 	fmt.Println(isect)
 	assert := assert.New(t)
 	assert.True(isect.IsIntersect)
-	assert.Equal(4.0, isect.P1[0])
-	assert.Equal(6.0, isect.P2[0])
+	assert.Equal(4.0, isect.D1)
+	assert.Equal(6.0, isect.D2)
 }
 
 func TestSphereIntersectionAtTangent(t *testing.T) {
@@ -41,8 +41,8 @@ func TestSphereIntersectionAtTangent(t *testing.T) {
 	isect := Sphere{}.Intersect(ray)
 	assert := assert.New(t)
 	assert.True(isect.IsIntersect)
-	assert.Equal(5.0, isect.P1[0])
-	assert.Equal(5.0, isect.P2[0])
+	assert.Equal(5.0, isect.D1)
+	assert.Equal(5.0, isect.D2)
 }
 
 func TestSphereIntersectionRayMisses(t *testing.T) {
@@ -56,6 +56,6 @@ func TestSphereIntersectionRayBehindSphere(t *testing.T) {
 	isect := Sphere{}.Intersect(ray)
 	assert := assert.New(t)
 	assert.True(isect.IsIntersect)
-	assert.Equal(-6.0, isect.P1[0])
-	assert.Equal(-4.0, isect.P2[0])
+	assert.Equal(-6.0, isect.D1)
+	assert.Equal(-4.0, isect.D2)
 }
