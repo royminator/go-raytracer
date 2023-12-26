@@ -128,7 +128,19 @@ func TestCrossProduct(t *testing.T) {
 func TestMulElem(t *testing.T) {
 	expected := Vector4(0.9, 0.2, 0.04)
 	actual := Vector4(1, 0.2, 0.4).MulElem(Vector4(0.9, 1, 0.1))
-	if !expected.ApproxEqual(actual) {
-		t.Errorf("Expected %v, got %v", expected, actual)
-	}
+	assert.True(t, expected.ApproxEqual(actual))
+}
+
+func TestReflectVec4ApproachingAt45(t *testing.T) {
+	expected := Vector4(1, 1, 0)
+	v := Vector4(1, -1, 0)
+	n := Vector4(0, 1, 0)
+	assert.Equal(t, expected, v.Reflect(n))
+}
+
+func TestReflectVec4OffSlantedSurface(t *testing.T) {
+	expected := Vector4(1, 0, 0)
+	v := Vector4(0, -1, 0)
+	n := Vector4(math.Sqrt2/2.0, math.Sqrt2/2.0, 0)
+	assert.True(t, expected.ApproxEqual(v.Reflect(n)))
 }

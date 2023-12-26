@@ -7,6 +7,7 @@ import (
 	m "roytracer/math"
 
 	"github.com/stretchr/testify/assert"
+	"roytracer/mtl"
 )
 
 func TestCreateRay(t *testing.T) {
@@ -97,36 +98,36 @@ func TestInsersectRaySetsObjectId(t *testing.T) {
 func TestHitAllIntersectionGT0(t *testing.T) {
 	type testData struct {
 		isects []Intersection
-		any bool
-		res Intersection
+		any    bool
+		res    Intersection
 	}
 
 	s := NewSphere()
 	td := []testData{
-		{ 
+		{
 			isects: []Intersection{
-				{ T: 1.0 }, { T: 2 },
+				{T: 1.0}, {T: 2},
 			},
 			any: true,
 			res: Intersection{Id: s.Id, T: 1},
 		},
-		{ 
+		{
 			isects: []Intersection{
-				{ T: -1 }, { T: 1 },
+				{T: -1}, {T: 1},
 			},
 			any: true,
 			res: Intersection{Id: s.Id, T: 1},
 		},
-		{ 
+		{
 			isects: []Intersection{
-				{ T: -2 }, { T: -1 },
+				{T: -2}, {T: -1},
 			},
 			any: false,
 			res: Intersection{},
 		},
-		{ 
+		{
 			isects: []Intersection{
-				{ T: 5 }, { T: 7 }, { T: -3 }, { T: 2 },
+				{T: 5}, {T: 7}, {T: -3}, {T: 2},
 			},
 			any: true,
 			res: Intersection{Id: s.Id, T: 2.0},
@@ -189,12 +190,15 @@ func TestIntersectTranslatedSphereWithRay(t *testing.T) {
 }
 
 func TestSphereNormal(t *testing.T) {
-	type testData struct {p m.Vec4; res m.Vec4}
-	k := math.Sqrt(3.0)/3.0
+	type testData struct {
+		p   m.Vec4
+		res m.Vec4
+	}
+	k := math.Sqrt(3.0) / 3.0
 	td := []testData{
-		{ m.Point4(1, 0, 0), m.Vector4(1, 0, 0)},
-		{ m.Point4(0, 1, 0), m.Vector4(0, 1, 0)},
-		{ m.Point4(k, k, k), m.Vector4(k, k, k)},
+		{m.Point4(1, 0, 0), m.Vector4(1, 0, 0)},
+		{m.Point4(0, 1, 0), m.Vector4(0, 1, 0)},
+		{m.Point4(k, k, k), m.Vector4(k, k, k)},
 	}
 
 	s := NewSphere()
@@ -207,7 +211,7 @@ func TestSphereNormal(t *testing.T) {
 
 func TestSphereNormalIsNormalized(t *testing.T) {
 	s := NewSphere()
-	k := math.Sqrt(3.0)/3.0
+	k := math.Sqrt(3.0) / 3.0
 	n := s.NormalAt(m.Point4(k, k, k))
 	assert.Equal(t, n, n.Normalize())
 }
@@ -221,7 +225,19 @@ func TestSphereNormalOnTranslatedSphere(t *testing.T) {
 
 func TestSphereNormalOnTransformedSphere(t *testing.T) {
 	s := NewSphere()
-	s.Tf = m.Scale(m.Vec3{1, 0.5, 1}).Mul(m.RotZ(math.Pi/5.0))
+	s.Tf = m.Scale(m.Vec3{1, 0.5, 1}).Mul(m.RotZ(math.Pi / 5.0))
 	expected := m.Vector4(0, 0.97014, -0.24254)
 	assert.True(t, expected.ApproxEqual(s.NormalAt(m.Point4(0, math.Sqrt2/2.0, -math.Sqrt2/2.0))))
+}
+
+func TestSphereHasDefaultMaterial(t *testing.T) {
+	s := NewSphere()
+	assert.Equal(t, mtl.DefaultMaterial(), s.Material)
+}
+
+func TestSphereMayBeAssignedMaterial(t *testing.T) {
+	s := NewSphere()
+	material := mtl.Material{Ambient: 1}
+	s.Material = material
+	assert.Equal(t, material, s.Material)
 }

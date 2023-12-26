@@ -5,6 +5,7 @@ import (
 
 	"github.com/google/uuid"
 	m "roytracer/math"
+	"roytracer/mtl"
 )
 
 type (
@@ -14,8 +15,9 @@ type (
 	}
 
 	Sphere struct {
-		Id     uuid.UUID
-		Tf m.Mat4
+		Id       uuid.UUID
+		Tf       m.Mat4
+		Material mtl.Material
 	}
 
 	Intersection struct {
@@ -24,7 +26,7 @@ type (
 	}
 )
 
-//////////////// RAY //////////////// 
+// ////////////// RAY ////////////////
 func (r Ray) Pos(t float64) m.Vec4 {
 	return r.Origin.Add(r.Dir.Mul(t))
 }
@@ -35,7 +37,7 @@ func (r Ray) Transform(tf m.Mat4) Ray {
 	return Ray{Origin: origin, Dir: dir}
 }
 
-//////////////// SPHERE //////////////// 
+// ////////////// SPHERE ////////////////
 func (s Sphere) Intersect(r Ray) []Intersection {
 	r = r.Transform(s.Tf.Inv())
 	sphereToRay := r.Origin.Sub(m.Point4(0, 0, 0))
@@ -61,7 +63,11 @@ func (s Sphere) Intersect(r Ray) []Intersection {
 }
 
 func NewSphere() Sphere {
-	return Sphere{Tf: m.Mat4Ident(), Id: uuid.New()}
+	return Sphere{
+		Tf: m.Mat4Ident(),
+		Id: uuid.New(),
+		Material: mtl.DefaultMaterial(),
+	}
 }
 
 func (s Sphere) NormalAt(p m.Vec4) m.Vec4 {
@@ -73,7 +79,7 @@ func (s Sphere) NormalAt(p m.Vec4) m.Vec4 {
 	return nWorld.Normalize()
 }
 
-//////////////// INTERSECTIONS //////////////// 
+// ////////////// INTERSECTIONS ////////////////
 func Intersections(isects ...Intersection) []Intersection {
 	return isects
 }
