@@ -64,6 +64,15 @@ func NewSphere() Sphere {
 	return Sphere{Tf: m.Mat4Ident(), Id: uuid.New()}
 }
 
+func (s Sphere) NormalAt(p m.Vec4) m.Vec4 {
+	invTf := s.Tf.Inv()
+	pObj := invTf.MulVec(p)
+	nObj := pObj.Sub(m.Point4(0, 0, 0))
+	nWorld := invTf.Tpose().MulVec(nObj)
+	nWorld[3] = 0
+	return nWorld.Normalize()
+}
+
 //////////////// INTERSECTIONS //////////////// 
 func Intersections(isects ...Intersection) []Intersection {
 	return isects

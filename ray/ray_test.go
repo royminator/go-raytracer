@@ -1,6 +1,7 @@
 package ray
 
 import (
+	"math"
 	"testing"
 
 	m "roytracer/math"
@@ -185,4 +186,42 @@ func TestIntersectTranslatedSphereWithRay(t *testing.T) {
 	s.Tf = m.Trans(m.Vec3{5, 0, 0})
 	isects := s.Intersect(ray)
 	assert.Equal(t, 0, len(isects))
+}
+
+func TestSphereNormal(t *testing.T) {
+	type testData struct {p m.Vec4; res m.Vec4}
+	k := math.Sqrt(3.0)/3.0
+	td := []testData{
+		{ m.Point4(1, 0, 0), m.Vector4(1, 0, 0)},
+		{ m.Point4(0, 1, 0), m.Vector4(0, 1, 0)},
+		{ m.Point4(k, k, k), m.Vector4(k, k, k)},
+	}
+
+	s := NewSphere()
+
+	assert := assert.New(t)
+	for _, d := range td {
+		assert.Equal(d.res, s.NormalAt(d.p))
+	}
+}
+
+func TestSphereNormalIsNormalized(t *testing.T) {
+	s := NewSphere()
+	k := math.Sqrt(3.0)/3.0
+	n := s.NormalAt(m.Point4(k, k, k))
+	assert.Equal(t, n, n.Normalize())
+}
+
+func TestSphereNormalOnTranslatedSphere(t *testing.T) {
+	s := NewSphere()
+	s.Tf = m.Trans(m.Vec3{0, 1, 0})
+	expected := m.Vector4(0, 0.70711, -0.70711)
+	assert.True(t, expected.ApproxEqual(s.NormalAt(m.Point4(0, 1.70711, -0.70711))))
+}
+
+func TestSphereNormalOnTransformedSphere(t *testing.T) {
+	s := NewSphere()
+	s.Tf = m.Scale(m.Vec3{1, 0.5, 1}).Mul(m.RotZ(math.Pi/5.0))
+	expected := m.Vector4(0, 0.97014, -0.24254)
+	assert.True(t, expected.ApproxEqual(s.NormalAt(m.Point4(0, math.Sqrt2/2.0, -math.Sqrt2/2.0))))
 }
