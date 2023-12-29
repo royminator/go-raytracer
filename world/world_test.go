@@ -1,0 +1,107 @@
+package world
+
+import (
+	"testing"
+
+	m "roytracer/math"
+	"roytracer/mtl"
+	"roytracer/shape"
+
+	"github.com/stretchr/testify/assert"
+)
+
+func TestCreateWorld(t *testing.T) {
+	w := World{}
+	assert.Empty(t, w.Objects)
+}
+
+func TestDefaultWorld(t *testing.T) {
+	w := DefaultWorld()
+	assert.Len(t, w.Objects, 2)
+}
+
+func TestIntersectWorld(t *testing.T) {
+	w := DefaultWorld()
+	ray := shape.Ray{
+		Origin: m.Point4(0, 0, -5),
+		Dir:    m.Vector4(0, 0, 1),
+	}
+	isects := w.Intersect(ray)
+	assert := assert.New(t)
+	assert.Len(isects, 4)
+	assert.Equal(4.0, isects[0].T)
+	assert.Equal(4.5, isects[1].T)
+	assert.Equal(5.5, isects[2].T)
+	assert.Equal(6.0, isects[3].T)
+}
+
+func TestShadingIntersection(t *testing.T) {
+	w := DefaultWorld()
+	r := shape.Ray{
+		Origin: m.Point4(0, 0, -5),
+		Dir: m.Vector4(0, 0, 1),
+	}
+	s := w.Objects[0]
+	isect := shape.Intersection{
+		O: s,
+		T: 4,
+	}
+	comps := isect.Prepare(r)
+	c := w.ShadeHit(comps)
+	assert.True(t, c.ApproxEqual(m.Vec4{0.38066, 0.47583, 0.2855, 0}))
+}
+
+func TestShadingIntersectionFromInside(t *testing.T) {
+	w := DefaultWorld()
+	w.Light = mtl.PointLight{
+		Pos: m.Point4(0, 0.25, 0),
+		Intensity: m.Vec4{1, 1, 1, 0},
+	}
+	r := shape.Ray{
+		Origin: m.Point4(0, 0, 0),
+		Dir: m.Vector4(0, 0, 1),
+	}
+	s := w.Objects[1]
+	isect := shape.Intersection{
+		O: s,
+		T: 0.5,
+	}
+	comps := isect.Prepare(r)
+	c := w.ShadeHit(comps)
+	assert.True(t, c.ApproxEqual(m.Vec4{0.90498, 0.90498, 0.90498, 0}))
+}
+
+func TestColorWhenRayMisses(t *testing.T) {
+	w := DefaultWorld()
+	r := shape.Ray{
+		Origin: m.Point4(0, 0, -5),
+		Dir: m.Vector4(0, 1, 0),
+	}
+	c := w.ColorAt(r)
+	assert.Equal(t, m.Vec4With(0), c)
+}
+
+func TestColorWhenRayHits(t *testing.T) {
+	w := DefaultWorld()
+	r := shape.Ray{
+		Origin: m.Point4(0, 0, -5),
+		Dir: m.Vector4(0, 0, 1),
+	}
+	c := w.ColorAt(r)
+	assert.True(t, c.ApproxEqual(m.Vec4{0.38066, 0.47583, 0.2855, 0.0}))
+}
+
+func TestColorWithIntersectionBehindRay(t *testing.T) {
+	w := DefaultWorld()
+	mat := mtl.Material{Ambient: 1.0}
+	outer := w.Objects[0]
+	inner := w.Objects[1]
+	outer.SetMaterial(mat)
+	inner.SetMaterial(mat)
+	r := shape.Ray{
+		Origin: m.Point4(0, 0, 0.75),
+		Dir: m.Vector4(0, 0, -1),
+	}
+	c := w.ColorAt(r)
+	assert.Equal(t, c, inner.Material.Color)
+}

@@ -1,28 +1,29 @@
 package main
 
 import (
+	"time"
+
 	. "roytracer/gfx"
 	. "roytracer/math"
-	. "roytracer/ray"
 	"roytracer/mtl"
-	"time"
+	. "roytracer/shape"
 )
 
 var (
-	SpherePos = Vec3{0, 0, -1}
-	ViewPos = Vec4{0, 0, 5, 1}
-	SphereRadius = 2.0
-	WallWidth = 5.0
-	WallHeight = 5.0
-	CanvasWidth uint32 = 900
+	SpherePos           = Vec3{0, 0, -1}
+	ViewPos             = Vec4{0, 0, 5, 1}
+	SphereRadius        = 2.0
+	WallWidth           = 5.0
+	WallHeight          = 5.0
+	CanvasWidth  uint32 = 900
 	CanvasHeight uint32 = 900
-	Light = mtl.PointLight{Pos: Point4(-10, -10, 10), Intensity: Color4(1, 1, 1, 0)}
+	Light               = mtl.PointLight{Pos: Point4(-10, -10, 10), Intensity: Color4(1, 1, 1, 0)}
 )
 
 func main() {
 	sphere := NewSphere()
 	sphere.Material.Color = Vec4{1, 0.2, 1, 0}
-	sphere.Tf = Trans(SpherePos).Mul(Scale(Vec3{SphereRadius, SphereRadius, SphereRadius}))
+	sphere.SetTf(Trans(SpherePos).Mul(Scale(Vec3{SphereRadius, SphereRadius, SphereRadius})))
 	canvas := NewCanvas(CanvasWidth, CanvasHeight, ColorBlack)
 	sequential(sphere, canvas)
 	p := PPMWriter{MaxLineLength: 70}
@@ -58,8 +59,8 @@ func castRay(s Sphere, ray Ray, canvas *Canvas, m, n uint32) {
 }
 
 func computeDir(m, n uint32, wallW, wallH float64, canvasW, canvasH uint32) Vec4 {
-	halfWallW := wallW/2.0
-	halfWallH := wallH/2.0
+	halfWallW := wallW / 2.0
+	halfWallH := wallH / 2.0
 	xw := wallW/float64(canvasW)*float64(n) - halfWallW
 	yw := wallH/float64(canvasH)*float64(m) - halfWallH
 	wallPoint := Point4(xw, yw, 0)

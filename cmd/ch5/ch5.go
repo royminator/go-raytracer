@@ -2,20 +2,21 @@ package main
 
 import (
 	"fmt"
-	. "roytracer/gfx"
-	. "roytracer/math"
-	. "roytracer/ray"
 	"sync"
 	"time"
+
+	. "roytracer/gfx"
+	. "roytracer/math"
+	. "roytracer/shape"
 )
 
 var (
-	LightPos = Vec4{0, 0, -3}
-	SpherePos = Vec3{0, 0, -1}
-	SphereRadius = 2.0
-	WallWidth = 4.0
-	WallHeight = 4.0
-	CanvasWidth uint32 = 300
+	LightPos            = Vec4{0, 0, -3}
+	SpherePos           = Vec3{0, 0, -1}
+	SphereRadius        = 2.0
+	WallWidth           = 4.0
+	WallHeight          = 4.0
+	CanvasWidth  uint32 = 300
 	CanvasHeight uint32 = 300
 )
 
@@ -27,7 +28,7 @@ type SyncCanvas struct {
 
 func main() {
 	sphere := NewSphere()
-	sphere.Tf = Trans(Vec3{0, 0, 1}).Mul(Scale(Vec3{SphereRadius, SphereRadius, SphereRadius}))
+	sphere.SetTf(Trans(Vec3{0, 0, 1}).Mul(Scale(Vec3{SphereRadius, SphereRadius, SphereRadius})))
 	canvas := SyncCanvas{C: NewCanvas(CanvasWidth, CanvasHeight, ColorBlack)}
 	fmt.Printf("seq: %v\n", sequential(sphere, &canvas))
 	fmt.Printf("par: %v\n", parallel(sphere, &canvas))
@@ -75,8 +76,8 @@ func castRay(s Sphere, ray Ray, canvas *SyncCanvas, m, n uint32) {
 }
 
 func computeDir(m, n uint32, wallW, wallH float64, canvasW, canvasH uint32) Vec4 {
-	halfWallW := wallW/2.0
-	halfWallH := wallH/2.0
+	halfWallW := wallW / 2.0
+	halfWallH := wallH / 2.0
 	xw := wallW/float64(canvasW)*float64(n) - halfWallW
 	yw := wallH/float64(canvasH)*float64(m) - halfWallH
 	wallPoint := Point4(xw, yw, 0)

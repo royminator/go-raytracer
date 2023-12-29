@@ -114,3 +114,45 @@ func TestChainedTransformationsAppiedReverseOrder(t *testing.T) {
 	tf := Trans(Vec3{10, 5, 7}).Mul(Scale(Vec3{5, 5, 5})).Mul(RotX(math.Pi/2.0))
 	assert.True(t, tf.MulVec(Point4(1, 0, 1)).ApproxEqual(Point4(15, 0, 7)))
 }
+
+func TestDefaultViewTransformationOrientation(t *testing.T) {
+	tf := View(
+		Point4(0, 0, 0),
+		Point4(0, 0, -1),
+		Vector4(0, 1, 0),
+	)
+	assert.Equal(t, Mat4Ident(), tf)
+}
+
+func TestViewLookingInPositiveZDirection(t *testing.T) {
+	tf := View(
+		Point4(0, 0, 0),
+		Point4(0, 0, 1),
+		Vector4(0, 1, 0),
+	)
+	assert.Equal(t, Scale(Vec3{-1, 1, -1}), tf)
+}
+
+func TestViewMovesWorld(t *testing.T) {
+	tf := View(
+		Point4(0, 0, 8),
+		Point4(0, 0, 0),
+		Vector4(0, 1, 0),
+	)
+	assert.Equal(t, Trans(Vec3{0, 0, -8}), tf)
+}
+
+func TestViewArbitrary(t *testing.T) {
+	tf := View(
+		Point4(1, 3, 2),
+		Point4(4, -2, 8),
+		Vector4(1, 1, 0),
+	)
+	expected := Mat4FromRows(
+		Vec4{-0.50709, 0.50709, 0.67612, -2.36643},
+		Vec4{0.76772, 0.60609, 0.12122, -2.82843},
+		Vec4{-0.35857, 0.59761, -0.71714, 0.00000},
+		Vec4{0.00000, 0.00000, 0.00000, 1.00000},
+	)
+	assert.True(t, expected.ApproxEqual(tf))
+}

@@ -102,6 +102,10 @@ func (v Vec4) Reflect(n Vec4) Vec4 {
 	return v.Sub(n.Mul(2).Mul(v.Dot(n)))
 }
 
+func (v Vec4) ToVec3() Vec3 {
+	return Vec3{v[0], v[1], v[2]}
+}
+
 func (v Vec3) ToVec4() Vec4 {
 	return Vec4{v[0], v[1], v[2], 1}
 }

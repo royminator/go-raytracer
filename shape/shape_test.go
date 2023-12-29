@@ -1,4 +1,4 @@
-package ray
+package shape
 
 import (
 	"math"
@@ -29,7 +29,8 @@ func TestComputePointOnRay(t *testing.T) {
 
 func TestSphereIntersection(t *testing.T) {
 	ray := Ray{m.Point4(0, 0, -5), m.Vector4(0, 0, 1)}
-	isect := NewSphere().Intersect(ray)
+	s := NewSphere()
+	isect := s.Intersect(ray)
 	assert := assert.New(t)
 	assert.Equal(2, len(isect))
 	assert.Equal(4.0, isect[0].T)
@@ -38,7 +39,8 @@ func TestSphereIntersection(t *testing.T) {
 
 func TestSphereIntersectionAtTangent(t *testing.T) {
 	ray := Ray{m.Point4(0, 1, -5), m.Vector4(0, 0, 1)}
-	isect := NewSphere().Intersect(ray)
+	s := NewSphere()
+	isect := s.Intersect(ray)
 	assert := assert.New(t)
 	assert.Equal(2, len(isect))
 	assert.Equal(5.0, isect[0].T)
@@ -47,13 +49,15 @@ func TestSphereIntersectionAtTangent(t *testing.T) {
 
 func TestSphereIntersectionRayMisses(t *testing.T) {
 	ray := Ray{m.Point4(0, 2, -5), m.Vector4(0, 0, 1)}
-	isect := NewSphere().Intersect(ray)
+	s := NewSphere()
+	isect := s.Intersect(ray)
 	assert.Equal(t, 0, len(isect))
 }
 
 func TestSphereIntersectionRayBehindSphere(t *testing.T) {
 	ray := Ray{m.Point4(0, 0, 5), m.Vector4(0, 0, 1)}
-	isect := NewSphere().Intersect(ray)
+	s := NewSphere()
+	isect := s.Intersect(ray)
 	assert := assert.New(t)
 	assert.Equal(2, len(isect))
 	assert.Equal(-6.0, isect[0].T)
@@ -62,44 +66,45 @@ func TestSphereIntersectionRayBehindSphere(t *testing.T) {
 
 func TestSphereIntersectRayInsideSphere(t *testing.T) {
 	ray := Ray{m.Point4(0, 0, 0), m.Vector4(0, 0, 1)}
-	isect := NewSphere().Intersect(ray)
+	s := NewSphere()
+	isect := s.Intersect(ray)
 	assert := assert.New(t)
 	assert.Equal(2, len(isect))
 	assert.Equal(-1.0, isect[0].T)
 	assert.Equal(1.0, isect[1].T)
 }
 
-func TestIntersectStoresObjectId(t *testing.T) {
+func TestIntersectStoresObject(t *testing.T) {
 	s := NewSphere()
-	isect := Intersection{Id: s.Id, T: 3.5}
-	assert.Equal(t, s.Id, isect.Id)
+	isect := Intersection{O: &s, T: 3.5}
+	assert.Equal(t, &s, isect.O)
 	assert.Equal(t, 3.5, isect.T)
 }
 
 func TestInterectionAggregateTValues(t *testing.T) {
 	s := NewSphere()
-	i1 := Intersection{Id: s.Id, T: 3.5}
-	i2 := Intersection{Id: s.Id, T: 5.5}
+	i1 := Intersection{O: &s, T: 3.5}
+	i2 := Intersection{O: &s, T: 5.5}
 	is := Intersections(i1, i2)
 	assert.Equal(t, 2, len(is))
 	assert.Equal(t, 3.5, is[0].T)
 	assert.Equal(t, 5.5, is[1].T)
 }
 
-func TestInsersectRaySetsObjectId(t *testing.T) {
+func TestIntersectRaySetsObject(t *testing.T) {
 	s := NewSphere()
 	ray := Ray{m.Point4(0, 0, -5), m.Vector4(0, 0, 1)}
 	isects := s.Intersect(ray)
 	assert.Equal(t, 2, len(isects))
-	assert.Equal(t, s.Id, isects[0].Id)
-	assert.Equal(t, s.Id, isects[1].Id)
+	assert.Equal(t, &s, isects[0].O)
+	assert.Equal(t, &s, isects[1].O)
 }
 
 func TestHitAllIntersectionGT0(t *testing.T) {
 	type testData struct {
+		res    Intersection
 		isects []Intersection
 		any    bool
-		res    Intersection
 	}
 
 	s := NewSphere()
@@ -109,14 +114,14 @@ func TestHitAllIntersectionGT0(t *testing.T) {
 				{T: 1.0}, {T: 2},
 			},
 			any: true,
-			res: Intersection{Id: s.Id, T: 1},
+			res: Intersection{O: &s, T: 1},
 		},
 		{
 			isects: []Intersection{
 				{T: -1}, {T: 1},
 			},
 			any: true,
-			res: Intersection{Id: s.Id, T: 1},
+			res: Intersection{O: &s, T: 1},
 		},
 		{
 			isects: []Intersection{
@@ -130,7 +135,7 @@ func TestHitAllIntersectionGT0(t *testing.T) {
 				{T: 5}, {T: 7}, {T: -3}, {T: 2},
 			},
 			any: true,
-			res: Intersection{Id: s.Id, T: 2.0},
+			res: Intersection{O: &s, T: 2.0},
 		},
 	}
 
@@ -167,14 +172,14 @@ func TestSpheresDefaultTransformIsIdentity(t *testing.T) {
 func TestSphereSetTransform(t *testing.T) {
 	s := NewSphere()
 	expected := m.Trans(m.Vec3{2, 3, 4})
-	s.Tf = expected
+	s.SetTf(expected)
 	assert.Equal(t, expected, s.Tf)
 }
 
 func TestIntersectScaledSphereWithRay(t *testing.T) {
 	ray := Ray{m.Point4(0, 0, -5), m.Vector4(0, 0, 1)}
 	s := NewSphere()
-	s.Tf = m.Scale(m.Vec3{2, 2, 2})
+	s.SetTf(m.Scale(m.Vec3{2, 2, 2}))
 	isects := s.Intersect(ray)
 	assert.Equal(t, 2, len(isects))
 	assert.Equal(t, 3.0, isects[0].T)
@@ -184,7 +189,7 @@ func TestIntersectScaledSphereWithRay(t *testing.T) {
 func TestIntersectTranslatedSphereWithRay(t *testing.T) {
 	ray := Ray{m.Point4(0, 0, -5), m.Vector4(0, 0, 1)}
 	s := NewSphere()
-	s.Tf = m.Trans(m.Vec3{5, 0, 0})
+	s.SetTf(m.Trans(m.Vec3{5, 0, 0}))
 	isects := s.Intersect(ray)
 	assert.Equal(t, 0, len(isects))
 }
@@ -218,14 +223,14 @@ func TestSphereNormalIsNormalized(t *testing.T) {
 
 func TestSphereNormalOnTranslatedSphere(t *testing.T) {
 	s := NewSphere()
-	s.Tf = m.Trans(m.Vec3{0, 1, 0})
+	s.SetTf(m.Trans(m.Vec3{0, 1, 0}))
 	expected := m.Vector4(0, 0.70711, -0.70711)
 	assert.True(t, expected.ApproxEqual(s.NormalAt(m.Point4(0, 1.70711, -0.70711))))
 }
 
 func TestSphereNormalOnTransformedSphere(t *testing.T) {
 	s := NewSphere()
-	s.Tf = m.Scale(m.Vec3{1, 0.5, 1}).Mul(m.RotZ(math.Pi / 5.0))
+	s.SetTf(m.Scale(m.Vec3{1, 0.5, 1}).Mul(m.RotZ(math.Pi / 5.0)))
 	expected := m.Vector4(0, 0.97014, -0.24254)
 	assert.True(t, expected.ApproxEqual(s.NormalAt(m.Point4(0, math.Sqrt2/2.0, -math.Sqrt2/2.0))))
 }
@@ -240,4 +245,47 @@ func TestSphereMayBeAssignedMaterial(t *testing.T) {
 	material := mtl.Material{Ambient: 1}
 	s.Material = material
 	assert.Equal(t, material, s.Material)
+}
+
+func TestPreComputeStateOfIntersection(t *testing.T) {
+	ray := Ray{
+		Origin: m.Point4(0, 0, -5),
+		Dir:    m.Vector4(0, 0, 1),
+	}
+	s := NewSphere()
+	isect := Intersection{T: 4, O: &s}
+	comps := isect.Prepare(ray)
+	assert := assert.New(t)
+	assert.Equal(isect.T, comps.T)
+	assert.Equal(isect.O, comps.O)
+	assert.Equal(m.Point4(0, 0, -1), comps.Point)
+	assert.Equal(m.Vector4(0, 0, -1), comps.Eye)
+	assert.Equal(m.Vector4(0, 0, -1), comps.Normal)
+}
+
+func TestHitWhenIntersectionOnOutside(t *testing.T) {
+	r := Ray{
+		Origin: m.Point4(0, 0, -5),
+		Dir:    m.Vector4(0, 0, 1),
+	}
+	s := NewSphere()
+	isect := Intersection{O: &s, T: 4}
+	comps := isect.Prepare(r)
+	assert.False(t, comps.Inside)
+}
+
+func TestHitWhenIntersectionOnInside(t *testing.T) {
+	r := Ray{
+		Origin: m.Point4(0, 0, 0),
+		Dir:    m.Vector4(0, 0, 1),
+	}
+	s := NewSphere()
+	isect := Intersection{O: &s, T: 1}
+	comps := isect.Prepare(r)
+	assert := assert.New(t)
+	assert.True(comps.Inside)
+	assert.Equal(m.Point4(0, 0, 1), comps.Point)
+	assert.Equal(m.Vector4(0, 0, -1), comps.Eye)
+	assert.Equal(m.Vector4(0, 0, -1), comps.Normal)
+	assert.True(comps.Inside)
 }

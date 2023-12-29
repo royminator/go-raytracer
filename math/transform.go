@@ -47,3 +47,16 @@ func Shear(xy, xz, yx, yz, zx, zy float64) Mat4 {
 		Vec4{0, 0, 0, 1},
 	)
 }
+
+func View(from, to, up Vec4) Mat4 {
+	fwd := to.Sub(from).Normalize()
+	left := fwd.Cross(up.Normalize())
+	trueUp := left.Cross(fwd)
+	orient := Mat4FromRows(
+		Vec4{left[0], left[1], left[2], 0},
+		Vec4{trueUp[0], trueUp[1], trueUp[2], 0},
+		Vec4{-fwd[0], -fwd[1], -fwd[2], 0},
+		Vec4{0, 0, 0, 1},
+	)
+	return orient.Mul(Trans(from.Negate().ToVec3()))
+}
