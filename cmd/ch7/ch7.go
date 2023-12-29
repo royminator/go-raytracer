@@ -86,7 +86,7 @@ func createMiddleSphere() *shape.Sphere {
 
 func createRightSphere() *shape.Sphere {
 	s := shape.NewSphere()
-	tf := m.Trans(m.Vec3{1.5, 1, -0.5})
+	tf := m.Trans(m.Vec3{1.5, 0.5, -0.5})
 	tf = tf.Mul(m.Scale(m.Vec3{0.5, 0.5, 0.5}))
 	s.SetTf(tf)
 	s.Material = mtl.DefaultMaterial()
