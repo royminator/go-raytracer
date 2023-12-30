@@ -53,7 +53,7 @@ func castRay(s Sphere, ray Ray, canvas *Canvas, m, n uint32) {
 		point := ray.Pos(hit.T)
 		normal := s.NormalAt(point)
 		eye := ray.Dir.Negate()
-		color := mtl.Lighting(s.Material, Light, point, eye, normal)
+		color := mtl.Lighting(s.Material, Light, point, eye, normal, false)
 		canvas.WritePixel(n, m, color)
 	}
 }

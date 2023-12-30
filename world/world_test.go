@@ -96,12 +96,46 @@ func TestColorWithIntersectionBehindRay(t *testing.T) {
 	mat := mtl.Material{Ambient: 1.0}
 	outer := w.Objects[0]
 	inner := w.Objects[1]
-	outer.SetMaterial(mat)
-	inner.SetMaterial(mat)
+	outer.Material = mat
+	inner.Material = mat
 	r := shape.Ray{
 		Origin: m.Point4(0, 0, 0.75),
 		Dir: m.Vector4(0, 0, -1),
 	}
 	c := w.ColorAt(r)
 	assert.Equal(t, c, inner.Material.Color)
+}
+
+func TestNoShadowWhenNothingCollinearWithPointAndLight(t *testing.T) {
+	assert.False(t, DefaultWorld().IsShadowed(m.Point4(0, 10, 0)))
+}
+
+func TestShadowWhenSomethingIsBetweenPointAndLight(t *testing.T) {
+	assert.True(t, DefaultWorld().IsShadowed(m.Point4(10, -10, 10)))
+}
+
+func TestNoShadowWhenObjectBehindLight(t *testing.T) {
+	assert.False(t, DefaultWorld().IsShadowed(m.Point4(-20, 20, -20)))
+}
+
+func TestNoShadowWhenAnObjectIsBehindThePoint(t *testing.T) {
+	assert.False(t, DefaultWorld().IsShadowed(m.Point4(-2, 2, -2)))
+}
+
+func TestShadeHitWhenIntersectionInShadow(t *testing.T) {
+	s1 := shape.NewSphere()
+	s2 := shape.NewSphere()
+	s2.SetTf(m.Trans(m.Vec3{0, 0, 10}))
+	w := World{
+		Light: mtl.PointLight{
+			Pos: m.Point4(0, 0, -10),
+			Intensity: m.Vec4{1, 1, 1},
+		},
+		Objects: []*shape.Sphere{&s1, &s2},
+	}
+	ray := shape.Ray{Origin: m.Point4(0, 0, 5), Dir: m.Vector4(0, 0, 1)}
+	i := shape.Intersection{T: 4, O: &s2}
+	comps := i.Prepare(ray)
+	c := w.ShadeHit(comps)
+	assert.Equal(t, m.Vec4{0.1, 0.1, 0.1}, c)
 }

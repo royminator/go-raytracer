@@ -12,7 +12,7 @@ type World struct {
 	Light   mtl.PointLight
 }
 
-func DefaultWorld() World {
+func DefaultWorld() *World {
 	s1 := shape.NewSphere()
 	s1.Material.Color = m.Color4(0.8, 1.0, 0.6, 0.0)
 	s1.Material.Diffuse = 0.7
@@ -21,7 +21,7 @@ func DefaultWorld() World {
 	s2 := shape.NewSphere()
 	s2.SetTf(m.Scale(m.Vec3{0.5, 0.5, 0.5}))
 
-	return World{
+	return &World{
 		Light: mtl.PointLight{
 			Intensity: m.Color4(1, 1, 1, 0),
 			Pos: m.Point4(-10, 10, -10),
@@ -43,8 +43,9 @@ func (w *World) Intersect(ray shape.Ray) []shape.Intersection {
 }
 
 func (w *World) ShadeHit(comps shape.IntersectionComps) m.Vec4 {
-	return mtl.Lighting(comps.O.Material, w.Light,
-		comps.Point, comps.Eye, comps.Normal)
+	shadowed := w.IsShadowed(comps.OverPoint)
+	return mtl.Lighting(comps.O.Material, w.Light, comps.OverPoint,
+		comps.Eye, comps.Normal, shadowed)
 }
 
 
@@ -55,4 +56,16 @@ func (w *World) ColorAt(ray shape.Ray) m.Vec4 {
 		return w.ShadeHit(comps)
 	}
 	return m.Vec4With(0)
+}
+
+func (w *World) IsShadowed(p m.Vec4) bool {
+	v := w.Light.Pos.Sub(p)
+	dist := v.Magnitude()
+	dir := v.Normalize()
+	r := shape.Ray{Origin: p, Dir: dir}
+	isects := w.Intersect(r)
+	if hit, isHit := shape.Hit(isects); isHit && hit.T < dist {
+		return true
+	}
+	return false
 }

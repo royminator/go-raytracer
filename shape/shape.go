@@ -29,12 +29,13 @@ type (
 	}
 
 	IntersectionComps struct {
-		O      *Sphere
-		T      float64
-		Point  m.Vec4
-		Eye    m.Vec4
-		Normal m.Vec4
-		Inside bool
+		O         *Sphere
+		T         float64
+		Point     m.Vec4
+		Eye       m.Vec4
+		Normal    m.Vec4
+		Inside    bool
+		OverPoint m.Vec4
 	}
 )
 
@@ -96,10 +97,6 @@ func (s *Sphere) NormalAt(p m.Vec4) m.Vec4 {
 	return nWorld.Normalize()
 }
 
-func (s *Sphere) SetMaterial(mat mtl.Material) {
-	s.Material = mat
-}
-
 // ////////////// INTERSECTIONS ////////////////
 func Intersections(isects ...Intersection) []Intersection {
 	return isects
@@ -126,13 +123,15 @@ func (i Intersection) Prepare(ray Ray) IntersectionComps {
 		inside = true
 		normal = normal.Negate()
 	}
+	op := pos.Add(normal.Mul(m.EPSILON))
 
 	return IntersectionComps{
-		T:      i.T,
-		O:      i.O,
-		Point:  pos,
-		Eye:    eye,
-		Normal: normal,
-		Inside: inside,
+		T:         i.T,
+		O:         i.O,
+		Point:     pos,
+		Eye:       eye,
+		Normal:    normal,
+		Inside:    inside,
+		OverPoint: op,
 	}
 }

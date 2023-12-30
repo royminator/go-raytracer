@@ -289,3 +289,13 @@ func TestHitWhenIntersectionOnInside(t *testing.T) {
 	assert.Equal(m.Vector4(0, 0, -1), comps.Normal)
 	assert.True(comps.Inside)
 }
+
+func TestHitShouldOffsetThePoint(t *testing.T) {
+	r := Ray{Origin: m.Point4(0, 0, -5), Dir: m.Vector4(0, 0, 1)}
+	s := NewSphere()
+	s.SetTf(m.Trans(m.Vec3{0, 0, 1}))
+	i := Intersection{T: 5, O: &s}
+	comps := i.Prepare(r)
+	assert.Less(t, comps.OverPoint[2], m.EPSILON)
+	assert.Greater(t, comps.Point[2], comps.OverPoint[2])
+}
