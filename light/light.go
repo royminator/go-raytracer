@@ -1,8 +1,10 @@
-package mtl
+package light
 
 import (
 	"math"
 	m "roytracer/math"
+	"roytracer/mtl"
+	"roytracer/shape"
 )
 
 type (
@@ -16,8 +18,13 @@ var (
 	ColorBlack = m.Vec4{0, 0, 0, 0}
 )
 
-func Lighting(mat Material, light PointLight, pos, eye, normal m.Vec4, inShadow bool) m.Vec4 {
-	effColor := mat.Color.MulElem(light.Intensity)
+func Lighting(mat mtl.Material, shape shape.Shape, light PointLight, pos, eye, normal m.Vec4, inShadow bool) m.Vec4 {
+	color := mat.Color
+	if shape.GetMat().Pattern != nil {
+		color = shape.SamplePatternAt(pos)
+	}
+
+	effColor := color.MulElem(light.Intensity)
 	ambient := effColor.Mul(mat.Ambient)
 
 	if inShadow {

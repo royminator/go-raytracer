@@ -2,31 +2,31 @@ package world
 
 import (
 	m "roytracer/math"
-	"roytracer/mtl"
 	"roytracer/shape"
 	"sort"
+	"roytracer/light"
 )
 
 type World struct {
-	Objects []*shape.Sphere
-	Light   mtl.PointLight
+	Objects []shape.Shape
+	Light   light.PointLight
 }
 
 func DefaultWorld() *World {
 	s1 := shape.NewSphere()
-	s1.Material.Color = m.Color4(0.8, 1.0, 0.6, 0.0)
-	s1.Material.Diffuse = 0.7
-	s1.Material.Specular = 0.2
+	s1.O.Material.Color = m.Color4(0.8, 1.0, 0.6, 0.0)
+	s1.O.Material.Diffuse = 0.7
+	s1.O.Material.Specular = 0.2
 
 	s2 := shape.NewSphere()
-	s2.SetTf(m.Scale(m.Vec3{0.5, 0.5, 0.5}))
+	s2.SetTf(m.Scale(0.5, 0.5, 0.5))
 
 	return &World{
-		Light: mtl.PointLight{
+		Light: light.PointLight{
 			Intensity: m.Color4(1, 1, 1, 0),
 			Pos: m.Point4(-10, 10, -10),
 		},
-		Objects: []*shape.Sphere{&s1, &s2},
+		Objects: []shape.Shape{&s1, &s2},
 	}
 }
 
@@ -44,7 +44,7 @@ func (w *World) Intersect(ray shape.Ray) []shape.Intersection {
 
 func (w *World) ShadeHit(comps shape.IntersectionComps) m.Vec4 {
 	shadowed := w.IsShadowed(comps.OverPoint)
-	return mtl.Lighting(comps.O.Material, w.Light, comps.OverPoint,
+	return light.Lighting(comps.S.GetMat(), comps.S, w.Light, comps.OverPoint,
 		comps.Eye, comps.Normal, shadowed)
 }
 

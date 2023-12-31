@@ -1,8 +1,12 @@
 package mtl
 
-import m "roytracer/math"
+import (
+	m "roytracer/math"
+	"roytracer/pattern"
+)
 
 type Material struct {
+	Pattern   pattern.Pattern
 	Color     m.Vec4
 	Ambient   float64
 	Diffuse   float64

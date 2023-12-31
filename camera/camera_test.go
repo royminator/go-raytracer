@@ -48,7 +48,7 @@ func TestConstructingARayThroughCornerOfCanvas(t *testing.T) {
 
 func TestConstructingARayWhenCameraIsTransformed(t *testing.T) {
 	cam := NewCamera(201, 101, math.Pi/2.0)
-	cam.SetTf(m.RotY(math.Pi / 4.0).Mul(m.Trans(m.Vec3{0, -2, 5})))
+	cam.SetTf(m.RotY(math.Pi / 4.0).Mul(m.Trans(0, -2, 5)))
 	r := cam.RayForPixel(100, 50)
 	assert.Equal(t, m.Point4(0, 2, -5), r.Origin)
 	assert.True(t, m.Vector4(math.Sqrt2/2.0, 0, -math.Sqrt2/2.0).ApproxEqual(r.Dir))

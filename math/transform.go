@@ -2,14 +2,14 @@ package math
 
 import "math"
 
-func Trans(t Vec3) Mat4 {
+func Trans(x, y, z float64) Mat4 {
 	id := Mat4Ident()
-	id.SetCol(3, t.ToVec4())
+	id.SetCol(3, Vec4{x, y, z, 1})
 	return id
 }
 
-func Scale(t Vec3) Mat4 {
-	return Mat4Diag(t.ToVec4())
+func Scale(x, y, z float64) Mat4 {
+	return Mat4Diag(Vec4{x, y, z, 1})
 }
 
 func RotX(r float64) Mat4 {
@@ -58,5 +58,6 @@ func View(from, to, up Vec4) Mat4 {
 		Vec4{-fwd[0], -fwd[1], -fwd[2], 0},
 		Vec4{0, 0, 0, 1},
 	)
-	return orient.Mul(Trans(from.Negate().ToVec3()))
+	from = from.Negate()
+	return orient.Mul(Trans(from[0], from[1], from[2]))
 }

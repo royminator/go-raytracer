@@ -4,8 +4,8 @@ import (
 	"time"
 
 	. "roytracer/gfx"
+	"roytracer/light"
 	. "roytracer/math"
-	"roytracer/mtl"
 	. "roytracer/shape"
 )
 
@@ -17,13 +17,13 @@ var (
 	WallHeight          = 5.0
 	CanvasWidth  uint32 = 900
 	CanvasHeight uint32 = 900
-	Light               = mtl.PointLight{Pos: Point4(-10, -10, 10), Intensity: Color4(1, 1, 1, 0)}
+	Light               = light.PointLight{Pos: Point4(-10, -10, 10), Intensity: Color4(1, 1, 1, 0)}
 )
 
 func main() {
 	sphere := NewSphere()
-	sphere.Material.Color = Vec4{1, 0.2, 1, 0}
-	sphere.SetTf(Trans(SpherePos).Mul(Scale(Vec3{SphereRadius, SphereRadius, SphereRadius})))
+	sphere.O.Material.Color = Vec4{1, 0.2, 1, 0}
+	sphere.SetTf(Trans(SpherePos[0], SpherePos[1], SpherePos[2]).Mul(Scale(SphereRadius, SphereRadius, SphereRadius)))
 	canvas := NewCanvas(CanvasWidth, CanvasHeight, ColorBlack)
 	sequential(sphere, canvas)
 	p := PPMWriter{MaxLineLength: 70}
@@ -53,7 +53,7 @@ func castRay(s Sphere, ray Ray, canvas *Canvas, m, n uint32) {
 		point := ray.Pos(hit.T)
 		normal := s.NormalAt(point)
 		eye := ray.Dir.Negate()
-		color := mtl.Lighting(s.Material, Light, point, eye, normal, false)
+		color := light.Lighting(s.GetMat(), hit.S, Light, point, eye, normal, false)
 		canvas.WritePixel(n, m, color)
 	}
 }

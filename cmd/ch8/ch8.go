@@ -8,11 +8,12 @@ import (
 	"roytracer/mtl"
 	"roytracer/shape"
 	"roytracer/world"
+	"roytracer/light"
 )
 
 func main() {
 	w := world.World{
-		Light: mtl.PointLight{
+		Light: light.PointLight{
 			Pos: m.Point4(-10, 10, -10),
 			Intensity: m.Vec4{1, 1, 1, 0},
 		},
@@ -29,81 +30,81 @@ func main() {
 	writer.SaveFile("scene.ppm")
 }
 
-func arrangeObjects() []*shape.Sphere {
+func arrangeObjects() []shape.Shape {
 	floor := createFloor()
-	leftWall := createLeftWall(floor.Material)
-	rightWall := createRightWall(floor.Material)
+	leftWall := createLeftWall(floor.O.Material)
+	rightWall := createRightWall(floor.O.Material)
 	middle := createMiddleSphere()
 	right := createRightSphere()
 	left := createLeftSphere()
-	return []*shape.Sphere{
+	return []shape.Shape{
 		floor, leftWall, rightWall, middle, left, right,
 	}
 }
 
 func createFloor() *shape.Sphere {
 	floor := shape.NewSphere()
-	floor.SetTf(m.Scale(m.Vec3{10, 0.01, 10}))
-	floor.Material = mtl.DefaultMaterial()
-	floor.Material.Color = m.Vec4{1, 0.9, 0.9, 0}
-	floor.Material.Specular = 0
+	floor.SetTf(m.Scale(10, 0.01, 10))
+	floor.O.Material = mtl.DefaultMaterial()
+	floor.O.Material.Color = m.Vec4{1, 0.9, 0.9, 0}
+	floor.O.Material.Specular = 0
 	return &floor
 }
 
 func createLeftWall(mat mtl.Material) *shape.Sphere {
 	left := shape.NewSphere()
-	tf := m.Trans(m.Vec3{0, 0, 5})
+	tf := m.Trans(0, 0, 5)
 	tf = tf.Mul(m.RotY(-math.Pi/4.0))
 	tf = tf.Mul(m.RotX(math.Pi/2.0))
-	tf = tf.Mul(m.Scale(m.Vec3{10, 0.01, 10}))
+	tf = tf.Mul(m.Scale(10, 0.01, 10))
 
 	left.SetTf(tf)
-	left.Material = mat
+	left.O.Material = mat
 	return &left
 }
 
 func createRightWall(mat mtl.Material) *shape.Sphere {
 	wall := shape.NewSphere()
-	tf := m.Trans(m.Vec3{0, 0, 5})
+	tf := m.Trans(0, 0, 5)
 	tf = tf.Mul(m.RotY(math.Pi/4.0))
 	tf = tf.Mul(m.RotX(math.Pi/2.0))
-	tf = tf.Mul(m.Scale(m.Vec3{10, 0.01, 10}))
+	tf = tf.Mul(m.Scale(10, 0.01, 10))
 
 	wall.SetTf(tf)
-	wall.Material = mat
+	wall.O.Material = mat
 	return &wall
 }
 
 func createMiddleSphere() *shape.Sphere {
 	s := shape.NewSphere()
-	s.SetTf(m.Trans(m.Vec3{-0.5, 1, 0.5}))
-	s.Material = mtl.DefaultMaterial()
-	s.Material.Color = m.Vec4{0.1, 1, 0.5, 0}
-	s.Material.Diffuse = 0.7
-	s.Material.Specular = 0.3
+	s.SetTf(m.Trans(-0.5, 1, 0.5))
+	s.O.Material = mtl.DefaultMaterial()
+	s.O.Material.Color = m.Vec4{0.1, 1, 0.5, 0}
+	s.O.Material.Diffuse = 0.7
+	s.O.Material.Specular = 0.3
 	return &s
 }
 
 func createRightSphere() *shape.Sphere {
 	s := shape.NewSphere()
-	tf := m.Trans(m.Vec3{1.5, 0.5, -0.5})
-	tf = tf.Mul(m.Scale(m.Vec3{0.5, 0.5, 0.5}))
+	tf := m.Trans(1.5, 0.5, -0.5)
+	tf = tf.Mul(m.Scale(0.5, 0.5, 0.5))
 	s.SetTf(tf)
-	s.Material = mtl.DefaultMaterial()
-	s.Material.Color = m.Vec4{0.5, 1, 0.1, 0}
-	s.Material.Diffuse = 0.7
-	s.Material.Specular = 0.3
+	s.O.Material = mtl.DefaultMaterial()
+	s.O.Material.Color = m.Vec4{0.5, 1, 0.1, 0}
+	s.O.Material.Diffuse = 0.7
+	s.O.Material.Specular = 0.3
 	return &s
 }
 
 func createLeftSphere() *shape.Sphere {
 	s := shape.NewSphere()
-	tf := m.Trans(m.Vec3{-1.5, 0.33, -0.75})
-	tf = tf.Mul(m.Scale(m.Vec3{0.33, 0.33, 0.33}))
+	tf := m.Trans(-1.5, 0.33, -0.75)
+	tf = tf.Mul(m.Scale(0.33, 0.33, 0.33))
 	s.SetTf(tf)
-	s.Material = mtl.DefaultMaterial()
-	s.Material.Color = m.Vec4{1.0, 0.8, 0.1, 0}
-	s.Material.Diffuse = 0.7
-	s.Material.Specular = 0.3
+	s.O.Material = mtl.DefaultMaterial()
+	s.O.Material.Color = m.Vec4{1.0, 0.8, 0.1, 0}
+	s.O.Material.Diffuse = 0.7
+	s.O.Material.Specular = 0.3
 	return &s
 }

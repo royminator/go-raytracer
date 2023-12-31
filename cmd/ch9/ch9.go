@@ -32,13 +32,11 @@ func main() {
 
 func arrangeObjects() []shape.Shape {
 	floor := createFloor()
-	leftWall := createLeftWall(floor.O.Material)
-	rightWall := createRightWall(floor.O.Material)
 	middle := createMiddleSphere()
 	right := createRightSphere()
 	left := createLeftSphere()
 	return []shape.Shape{
-		floor, leftWall, rightWall, middle, left, right,
+		floor, middle, left, right,
 	}
 }
 
@@ -49,30 +47,6 @@ func createFloor() *shape.Sphere {
 	floor.O.Material.Color = m.Vec4{1, 0.9, 0.9, 0}
 	floor.O.Material.Specular = 0
 	return &floor
-}
-
-func createLeftWall(mat mtl.Material) *shape.Sphere {
-	left := shape.NewSphere()
-	tf := m.Trans(0, 0, 5)
-	tf = tf.Mul(m.RotY(-math.Pi/4.0))
-	tf = tf.Mul(m.RotX(math.Pi/2.0))
-	tf = tf.Mul(m.Scale(10, 0.01, 10))
-
-	left.SetTf(tf)
-	left.O.Material = mat
-	return &left
-}
-
-func createRightWall(mat mtl.Material) *shape.Sphere {
-	wall := shape.NewSphere()
-	tf := m.Trans(0, 0, 5)
-	tf = tf.Mul(m.RotY(math.Pi/4.0))
-	tf = tf.Mul(m.RotX(math.Pi/2.0))
-	tf = tf.Mul(m.Scale(10, 0.01, 10))
-
-	wall.SetTf(tf)
-	wall.O.Material = mat
-	return &wall
 }
 
 func createMiddleSphere() *shape.Sphere {

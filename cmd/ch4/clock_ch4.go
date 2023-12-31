@@ -21,7 +21,7 @@ func drawClock(c *Canvas) {
 	arm := Vec4{0, -radius, 0, 1}
 
 	for i := 0; i < 12; i++ {
-		m, n := project(Trans(center).MulVec(arm), c)
+		m, n := project(Trans(center[0], center[1], center[2]).MulVec(arm), c)
 		c.WritePixel(n, m, ColorWhite)
 		arm = RotZ(angle).MulVec(arm)
 	}

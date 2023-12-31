@@ -3,6 +3,7 @@ package world
 import (
 	"testing"
 
+	"roytracer/light"
 	m "roytracer/math"
 	"roytracer/mtl"
 	"roytracer/shape"
@@ -43,7 +44,7 @@ func TestShadingIntersection(t *testing.T) {
 	}
 	s := w.Objects[0]
 	isect := shape.Intersection{
-		O: s,
+		S: s,
 		T: 4,
 	}
 	comps := isect.Prepare(r)
@@ -53,7 +54,7 @@ func TestShadingIntersection(t *testing.T) {
 
 func TestShadingIntersectionFromInside(t *testing.T) {
 	w := DefaultWorld()
-	w.Light = mtl.PointLight{
+	w.Light = light.PointLight{
 		Pos: m.Point4(0, 0.25, 0),
 		Intensity: m.Vec4{1, 1, 1, 0},
 	}
@@ -63,7 +64,7 @@ func TestShadingIntersectionFromInside(t *testing.T) {
 	}
 	s := w.Objects[1]
 	isect := shape.Intersection{
-		O: s,
+		S: s,
 		T: 0.5,
 	}
 	comps := isect.Prepare(r)
@@ -96,14 +97,14 @@ func TestColorWithIntersectionBehindRay(t *testing.T) {
 	mat := mtl.Material{Ambient: 1.0}
 	outer := w.Objects[0]
 	inner := w.Objects[1]
-	outer.Material = mat
-	inner.Material = mat
+	outer.SetMat(mat)
+	inner.SetMat(mat)
 	r := shape.Ray{
 		Origin: m.Point4(0, 0, 0.75),
 		Dir: m.Vector4(0, 0, -1),
 	}
 	c := w.ColorAt(r)
-	assert.Equal(t, c, inner.Material.Color)
+	assert.Equal(t, c, inner.GetMat().Color)
 }
 
 func TestNoShadowWhenNothingCollinearWithPointAndLight(t *testing.T) {
@@ -125,16 +126,16 @@ func TestNoShadowWhenAnObjectIsBehindThePoint(t *testing.T) {
 func TestShadeHitWhenIntersectionInShadow(t *testing.T) {
 	s1 := shape.NewSphere()
 	s2 := shape.NewSphere()
-	s2.SetTf(m.Trans(m.Vec3{0, 0, 10}))
+	s2.SetTf(m.Trans(0, 0, 10))
 	w := World{
-		Light: mtl.PointLight{
+		Light: light.PointLight{
 			Pos: m.Point4(0, 0, -10),
 			Intensity: m.Vec4{1, 1, 1},
 		},
-		Objects: []*shape.Sphere{&s1, &s2},
+		Objects: []shape.Shape{&s1, &s2},
 	}
 	ray := shape.Ray{Origin: m.Point4(0, 0, 5), Dir: m.Vector4(0, 0, 1)}
-	i := shape.Intersection{T: 4, O: &s2}
+	i := shape.Intersection{T: 4, S: &s2}
 	comps := i.Prepare(ray)
 	c := w.ShadeHit(comps)
 	assert.Equal(t, m.Vec4{0.1, 0.1, 0.1}, c)

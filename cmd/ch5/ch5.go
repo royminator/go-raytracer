@@ -28,7 +28,7 @@ type SyncCanvas struct {
 
 func main() {
 	sphere := NewSphere()
-	sphere.SetTf(Trans(Vec3{0, 0, 1}).Mul(Scale(Vec3{SphereRadius, SphereRadius, SphereRadius})))
+	sphere.SetTf(Trans(0, 0, 1).Mul(Scale(SphereRadius, SphereRadius, SphereRadius)))
 	canvas := SyncCanvas{C: NewCanvas(CanvasWidth, CanvasHeight, ColorBlack)}
 	fmt.Printf("seq: %v\n", sequential(sphere, &canvas))
 	fmt.Printf("par: %v\n", parallel(sphere, &canvas))
