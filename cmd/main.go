@@ -41,10 +41,11 @@ func createMiddleSphere() *shape.Sphere {
 	c1 := m.Vec4{0.812, 0.376, 0.702}
 	c2 := m.Vec4{0.835, 0.922, 0.09, 0.349}
 	p := pattern.NewStripePattern(c1, c2)
-	s.O.Material = mtl.DefaultMaterial()
 	s.O.Material.Color = m.Vec4{0.1, 1, 0.5, 0}
 	s.O.Material.Diffuse = 0.7
 	s.O.Material.Specular = 0.3
+	s.O.Material.Reflective = 0.5
+	s.O.Material.Shininess = 50
 	s.SetPattern(&p)
 	return &s
 }

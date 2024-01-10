@@ -1,10 +1,12 @@
 package world
 
 import (
+	"sort"
+
+	"roytracer/color"
+	"roytracer/light"
 	m "roytracer/math"
 	"roytracer/shape"
-	"sort"
-	"roytracer/light"
 )
 
 type World struct {
@@ -24,10 +26,14 @@ func DefaultWorld() *World {
 	return &World{
 		Light: light.PointLight{
 			Intensity: m.Color4(1, 1, 1, 0),
-			Pos: m.Point4(-10, 10, -10),
+			Pos:       m.Point4(-10, 10, -10),
 		},
 		Objects: []shape.Shape{&s1, &s2},
 	}
+}
+
+func (w *World) AddShape(s shape.Shape) {
+	w.Objects = append(w.Objects, s)
 }
 
 func (w *World) Intersect(ray shape.Ray) []shape.Intersection {
@@ -42,18 +48,19 @@ func (w *World) Intersect(ray shape.Ray) []shape.Intersection {
 	return isects
 }
 
-func (w *World) ShadeHit(comps shape.IntersectionComps) m.Vec4 {
+func (w *World) ShadeHit(comps shape.IntersectionComps, remaining int) m.Vec4 {
 	shadowed := w.IsShadowed(comps.OverPoint)
-	return light.Lighting(comps.S.GetMat(), comps.S, w.Light, comps.OverPoint,
+	surface := light.Lighting(comps.S.GetMat(), comps.S, w.Light, comps.OverPoint,
 		comps.Eye, comps.Normal, shadowed)
+	reflected := w.ReflectedColor(comps, remaining)
+	return surface.Add(reflected)
 }
 
-
-func (w *World) ColorAt(ray shape.Ray) m.Vec4 {
+func (w *World) ColorAt(ray shape.Ray, remaining int) m.Vec4 {
 	isects := w.Intersect(ray)
 	if hit, isHit := shape.Hit(isects); isHit {
 		comps := hit.Prepare(ray)
-		return w.ShadeHit(comps)
+		return w.ShadeHit(comps, remaining)
 	}
 	return m.Vec4With(0)
 }
@@ -68,4 +75,20 @@ func (w *World) IsShadowed(p m.Vec4) bool {
 		return true
 	}
 	return false
+}
+
+func (w *World) ReflectedColor(comps shape.IntersectionComps, remaining int) m.Vec4 {
+	if remaining <= 0 {
+		return color.Black
+	}
+	mat := comps.S.GetMat()
+	if mat.Reflective == 0.0 {
+		return m.Vec4With(0)
+	}
+	reflectedRay := shape.Ray{
+		Origin: comps.OverPoint,
+		Dir:    comps.Reflect,
+	}
+	color := w.ColorAt(reflectedRay, remaining-1)
+	return color.Mul(mat.Reflective)
 }

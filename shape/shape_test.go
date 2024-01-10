@@ -367,7 +367,7 @@ func TestNormalOnTranslatedShape(t *testing.T) {
 
 func TestNormalOnTransformedShape(t *testing.T) {
 	s := NewTestShape()
-	s.SetTf(m.Scale(1, 0.5, 1).Mul(m.RotZ(math.Pi/5.0)))
+	s.SetTf(m.Scale(1, 0.5, 1).Mul(m.RotZ(math.Pi / 5.0)))
 	n := s.NormalAt(m.Point4(0, math.Sqrt2/2.0, -math.Sqrt2/2.0))
 	expected := m.Vector4(0, 0.97014, -0.24254)
 	assert.True(t, expected.ApproxEqual(n))
@@ -472,4 +472,15 @@ func TestPatternWithShapeAndPatternTransformed(t *testing.T) {
 	s.SetPattern(&p)
 	actual := s.SamplePatternAt(m.Point4(2.5, 3, 3.5))
 	assert.Equal(t, m.Vec4{0.75, 0.5, 0.25}, actual)
+}
+
+func TestPrepareReflectionVector(t *testing.T) {
+	p := NewPlane()
+	r := Ray{
+		Origin: m.Point4(0, 1, -1),
+		Dir:    m.Vector4(0, -math.Sqrt2/2.0, math.Sqrt2/2.0),
+	}
+	isect := Intersection{T: math.Sqrt2, S: &p}
+	comps := isect.Prepare(r)
+	assert.Equal(t, m.Vector4(0, math.Sqrt2/2.0, math.Sqrt2/2.0), comps.Reflect)
 }

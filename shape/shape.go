@@ -54,6 +54,7 @@ type (
 		Normal    m.Vec4
 		Inside    bool
 		OverPoint m.Vec4
+		Reflect   m.Vec4
 	}
 )
 
@@ -250,6 +251,7 @@ func (i Intersection) Prepare(ray Ray) IntersectionComps {
 		Normal:    normal,
 		Inside:    inside,
 		OverPoint: op,
+		Reflect:   ray.Dir.Reflect(normal),
 	}
 }
 
@@ -261,8 +263,8 @@ func NewTestShape() Shape {
 
 func defaultObject() Object {
 	return Object{
-		Tf: m.Mat4Ident(),
-		InvTf: m.Mat4Ident(),
+		Tf:       m.Mat4Ident(),
+		InvTf:    m.Mat4Ident(),
 		Material: mtl.DefaultMaterial(),
 	}
 }
