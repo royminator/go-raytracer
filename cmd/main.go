@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"math"
 	"roytracer/camera"
 	"roytracer/gfx"
@@ -10,6 +11,7 @@ import (
 	"roytracer/pattern"
 	"roytracer/shape"
 	"roytracer/world"
+	"time"
 )
 
 func main() {
@@ -21,7 +23,9 @@ func main() {
 		Objects: arrangeObjects(),
 	}
 	camera := setupCamera()
+	tstart := time.Now().UTC()
 	image := camera.Render(&w)
+	fmt.Println("Render took:", time.Since(tstart))
 	writer := gfx.PPMWriter{MaxLineLength: 70}
 	writer.Write(image)
 	writer.SaveFile("scene.ppm")

@@ -2,6 +2,7 @@ package camera
 
 import (
 	"math"
+	"sync"
 
 	"roytracer/gfx"
 	m "roytracer/math"
@@ -63,12 +64,35 @@ func (c *Camera) RayForPixel(px, py int) shape.Ray {
 
 func (c *Camera) Render(w *world.World) *gfx.Canvas {
 	canvas := gfx.NewCanvas(uint32(c.Hsize), uint32(c.Vsize), gfx.ColorBlack)
+	// c.renderSequential(w, canvas)
+	c.renderParallel(w, canvas)
+	return canvas
+}
+
+func (c *Camera) renderSequential(w *world.World, canvas *gfx.Canvas) {
 	for m := 0; m < c.Vsize; m++ {
 		for n := 0; n < c.Hsize; n++ {
-			ray := c.RayForPixel(n, m)
-			color := w.ColorAt(ray, 4)
-			canvas.WritePixel(uint32(n), uint32(m), color)
+			c.computePixel(m, n, w, canvas)
 		}
 	}
-	return canvas
+}
+
+func (c *Camera) renderParallel(w *world.World, canvas *gfx.Canvas) {
+	var wg sync.WaitGroup
+	for m := 0; m < c.Vsize; m++ {
+		wg.Add(1)
+		go func(m int, w *world.World, canvas *gfx.Canvas) {
+			for n := 0; n < c.Hsize; n++ {
+				c.computePixel(m, n, w, canvas)
+			}
+			wg.Done()
+		}(m, w, canvas)
+	}
+	wg.Wait()
+}
+
+func (c *Camera) computePixel(m, n int, w *world.World, canvas *gfx.Canvas) {
+	ray := c.RayForPixel(n, m)
+	color := w.ColorAt(ray, 10)
+	canvas.WritePixel(uint32(n), uint32(m), color)
 }

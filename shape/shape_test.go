@@ -286,7 +286,7 @@ func TestPreComputeStateOfIntersection(t *testing.T) {
 	}
 	s := NewSphere()
 	isect := Intersection{T: 4, S: &s}
-	comps := isect.Prepare(ray)
+	comps := isect.Prepare(ray, []Intersection{isect})
 	assert := assert.New(t)
 	assert.Equal(isect.T, comps.T)
 	assert.Equal(isect.S, comps.S)
@@ -302,7 +302,7 @@ func TestHitWhenIntersectionOnOutside(t *testing.T) {
 	}
 	s := NewSphere()
 	isect := Intersection{S: &s, T: 4}
-	comps := isect.Prepare(r)
+	comps := isect.Prepare(r, []Intersection{isect})
 	assert.False(t, comps.Inside)
 }
 
@@ -313,7 +313,7 @@ func TestHitWhenIntersectionOnInside(t *testing.T) {
 	}
 	s := NewSphere()
 	isect := Intersection{S: &s, T: 1}
-	comps := isect.Prepare(r)
+	comps := isect.Prepare(r, []Intersection{isect})
 	assert := assert.New(t)
 	assert.True(comps.Inside)
 	assert.Equal(m.Point4(0, 0, 1), comps.Point)
@@ -327,7 +327,7 @@ func TestHitShouldOffsetThePoint(t *testing.T) {
 	s := NewSphere()
 	s.SetTf(m.Trans(0, 0, 1))
 	i := Intersection{T: 5, S: &s}
-	comps := i.Prepare(r)
+	comps := i.Prepare(r, []Intersection{i})
 	assert.Less(t, comps.OverPoint[2], m.EPSILON)
 	assert.Greater(t, comps.Point[2], comps.OverPoint[2])
 }
@@ -481,6 +481,58 @@ func TestPrepareReflectionVector(t *testing.T) {
 		Dir:    m.Vector4(0, -math.Sqrt2/2.0, math.Sqrt2/2.0),
 	}
 	isect := Intersection{T: math.Sqrt2, S: &p}
-	comps := isect.Prepare(r)
+	comps := isect.Prepare(r, []Intersection{isect})
 	assert.Equal(t, m.Vector4(0, math.Sqrt2/2.0, math.Sqrt2/2.0), comps.Reflect)
+}
+
+func TestCreateGlassSphere(t *testing.T) {
+	s := NewGlassSphere()
+	assert := assert.New(t)
+	assert.Equal(m.Mat4Ident(), s.O.Tf)
+	assert.Equal(1.0, s.O.Material.Transparency)
+	assert.Equal(1.5, s.O.Material.RefractiveIndex)
+}
+
+func TestFindingN1AndN2AtVariousIntersections(t *testing.T) {
+	a := NewGlassSphere()
+	a.SetTf(m.Scale(2, 2, 2))
+	a.O.Material.RefractiveIndex = 1.5
+
+	b := NewGlassSphere()
+	b.SetTf(m.Trans(0, 0, -0.25))
+	b.O.Material.RefractiveIndex = 2.0
+
+	c := NewGlassSphere()
+	c.SetTf(m.Trans(0, 0, 0.25))
+	c.O.Material.RefractiveIndex = 2.5
+
+	r := Ray{
+		Origin: m.Point4(0, 0, -4),
+		Dir: m.Vector4(0, 0, 1),
+	}
+	isects := []Intersection{
+		{S: &a, T:2},
+		{S: &b, T:2.75},
+		{S: &c, T:3.25},
+		{S: &b, T:4.75},
+		{S: &c, T:5.25},
+		{S: &a, T:6},
+	}
+
+	type testData struct {i int; n1, n2 float64}
+	td := []testData{
+		{i: 0, n1: 1.0, n2: 1.5},
+		{i: 1, n1: 1.5, n2: 2.0},
+		{i: 2, n1: 2.0, n2: 2.5},
+		{i: 3, n1: 2.5, n2: 2.5},
+		{i: 4, n1: 2.5, n2: 1.5},
+		{i: 5, n1: 1.5, n2: 1.0},
+	}
+
+	assert := assert.New(t)
+	for _, d := range td {
+		comps := isects[d.i].Prepare(r, isects)
+		assert.Equal(comps.N1, d.n1)
+		assert.Equal(comps.N2, d.n2)
+	}
 }

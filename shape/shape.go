@@ -6,6 +6,7 @@ import (
 	m "roytracer/math"
 	"roytracer/mtl"
 	"roytracer/pattern"
+	"github.com/elliotchance/pie/v2"
 )
 
 type (
@@ -55,6 +56,7 @@ type (
 		Inside    bool
 		OverPoint m.Vec4
 		Reflect   m.Vec4
+		N1, N2    float64
 	}
 )
 
@@ -75,6 +77,18 @@ func NewSphere() Sphere {
 		Tf:       m.Mat4Ident(),
 		InvTf:    m.Mat4Ident(),
 		Material: mtl.DefaultMaterial(),
+	}
+	return Sphere{O: o}
+}
+
+func NewGlassSphere() Sphere {
+	o := Object{
+		Tf:    m.Mat4Ident(),
+		InvTf: m.Mat4Ident(),
+		Material: mtl.Material{
+			Transparency:    1.0,
+			RefractiveIndex: 1.5,
+		},
 	}
 	return Sphere{O: o}
 }
@@ -232,7 +246,7 @@ func Hit(isects []Intersection) (Intersection, bool) {
 	return res, isHit
 }
 
-func (i Intersection) Prepare(ray Ray) IntersectionComps {
+func (i Intersection) Prepare(ray Ray, isects []Intersection) IntersectionComps {
 	pos := ray.Pos(i.T)
 	normal := i.S.NormalAt(pos)
 	eye := ray.Dir.Negate()
@@ -243,6 +257,8 @@ func (i Intersection) Prepare(ray Ray) IntersectionComps {
 	}
 	op := pos.Add(normal.Mul(m.EPSILON))
 
+	n1, n2 := computeN(i, isects)
+
 	return IntersectionComps{
 		T:         i.T,
 		S:         i.S,
@@ -252,7 +268,38 @@ func (i Intersection) Prepare(ray Ray) IntersectionComps {
 		Inside:    inside,
 		OverPoint: op,
 		Reflect:   ray.Dir.Reflect(normal),
+		N1:        n1,
+		N2:        n2,
 	}
+}
+
+func computeN(isect Intersection, isects []Intersection) (float64, float64) {
+	var n1, n2 float64
+	containers := []Shape{}
+	for _, i := range isects {
+		if i == isect {
+			if len(containers) == 0 {
+				n1 = 1.0
+			} else {
+				n1 = containers[len(containers)-1].GetMat().RefractiveIndex
+			}
+		}
+		if pie.Contains(containers, i.S) {
+			containers = pie.FilterNot(containers, func(shape Shape) bool { return shape == i.S })
+		} else {
+			containers = append(containers, i.S)
+		}
+
+		if i == isect {
+			if len(containers) == 0 {
+				n2 = 1.0
+			} else {
+				n2 = containers[len(containers)-1].GetMat().RefractiveIndex
+			}
+			break
+		}
+	}
+	return n1, n2
 }
 
 // ////////////// SHAPE ////////////////
