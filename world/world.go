@@ -55,6 +55,11 @@ func (w *World) ShadeHit(comps shape.IntersectionComps, remaining int) m.Vec4 {
 		comps.Eye, comps.Normal, shadowed)
 	reflected := w.ReflectedColor(comps, remaining)
 	refracted := w.RefractedColor(comps, remaining)
+	mtl := comps.S.GetMat()
+	if mtl.Reflective > 0.0 && mtl.Transparency > 0.0 {
+		reflectance := comps.Schlick()
+		return surface.Add(reflected.Mul(reflectance)).Add(refracted.Mul(1.0 - reflectance))
+	}
 	return surface.Add(reflected).Add(refracted)
 }
 
@@ -106,9 +111,9 @@ func (w *World) RefractedColor(comps shape.IntersectionComps, remaining int) m.V
 }
 
 func (w *World) hasTotalInternalReflection(comps shape.IntersectionComps, remaining int) m.Vec4 {
-	nRatio := comps.N1/comps.N2
+	nRatio := comps.N1 / comps.N2
 	cosI := comps.Eye.Dot(comps.Normal)
-	sin2t := nRatio*nRatio*(1.0 - cosI*cosI)
+	sin2t := nRatio * nRatio * (1.0 - cosI*cosI)
 	if sin2t > 1.0 {
 		return color.Black
 	}
@@ -116,7 +121,7 @@ func (w *World) hasTotalInternalReflection(comps shape.IntersectionComps, remain
 	dir := comps.Normal.Mul(nRatio*cosI - cosT).Sub(comps.Eye.Mul(nRatio))
 	refractedRay := shape.Ray{
 		Origin: comps.UnderPoint,
-		Dir: dir,
+		Dir:    dir,
 	}
 	return w.ColorAt(refractedRay, remaining-1).Mul(comps.S.GetMat().Transparency)
 }

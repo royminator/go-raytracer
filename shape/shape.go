@@ -318,3 +318,21 @@ func defaultObject() Object {
 		Material: mtl.DefaultMaterial(),
 	}
 }
+
+// ////////////// INTERSECTION COMPS ////////////////
+func (comps IntersectionComps) Schlick() float64 {
+	cos := comps.Eye.Dot(comps.Normal)
+
+	if comps.N1 > comps.N2 {
+		n := comps.N1 / comps.N2
+		sin2t := n * n * (1.0 - cos*cos)
+		if sin2t > 1.0 {
+			return 1.0
+		}
+		cosT := math.Sqrt(1.0 - sin2t)
+		cos = cosT
+	}
+	f := ((comps.N1 - comps.N2) / (comps.N1 + comps.N2))
+	r0 := f * f
+	return r0 + (1.0-r0)*math.Pow(1.0-cos, 5)
+}

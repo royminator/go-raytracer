@@ -195,7 +195,7 @@ func TestShadeHitWithReflectiveMaterial(t *testing.T) {
 func TestColorAtWithMutuallyReflectiveSurfaces(t *testing.T) {
 	w := World{
 		Light: light.PointLight{
-			Pos: m.Point4(0, 0, 0),
+			Pos:       m.Point4(0, 0, 0),
 			Intensity: color.White,
 		},
 	}
@@ -209,7 +209,7 @@ func TestColorAtWithMutuallyReflectiveSurfaces(t *testing.T) {
 	w.AddShape(&upper)
 	ray := shape.Ray{
 		Origin: m.Point4(0, 0, 0),
-		Dir: m.Vector4(0, 1, 0),
+		Dir:    m.Vector4(0, 1, 0),
 	}
 	w.ColorAt(ray, 4)
 }
@@ -269,11 +269,11 @@ func TestRefractedColorUnderTotalInternalReflection(t *testing.T) {
 	s.SetMat(mtl)
 	r := shape.Ray{
 		Origin: m.Point4(0, 0, math.Sqrt2/2.0),
-		Dir: m.Vector4(0, 1, 0),
+		Dir:    m.Vector4(0, 1, 0),
 	}
 	xs := []shape.Intersection{
-		{T: -math.Sqrt2/2.0, S: s},
-		{T: math.Sqrt2/2.0, S: s},
+		{T: -math.Sqrt2 / 2.0, S: s},
+		{T: math.Sqrt2 / 2.0, S: s},
 	}
 	comps := xs[1].Prepare(r, xs)
 	c := w.RefractedColor(comps, 5)
@@ -296,7 +296,7 @@ func TestRefractedColorWithARefractedRay(t *testing.T) {
 
 	r := shape.Ray{
 		Origin: m.Point4(0, 0, 0.1),
-		Dir: m.Vector4(0, 1, 0),
+		Dir:    m.Vector4(0, 1, 0),
 	}
 	xs := []shape.Intersection{
 		{S: a, T: -0.9899},
@@ -325,10 +325,35 @@ func TestShadeHitWithATransparentMaterial(t *testing.T) {
 
 	r := shape.Ray{
 		Origin: m.Point4(0, 0, -3),
-		Dir: m.Vector4(0, -math.Sqrt2/2.0, math.Sqrt2/2.0),
+		Dir:    m.Vector4(0, -math.Sqrt2/2.0, math.Sqrt2/2.0),
 	}
 	xs := []shape.Intersection{{T: math.Sqrt2, S: &floor}}
 	comps := xs[0].Prepare(r, xs)
 	color := w.ShadeHit(comps, 5)
 	assert.True(t, m.Vec4{0.93642, 0.68642, 0.68642}.ApproxEqual(color))
+}
+
+func TestShadeHitWithReflectiveTransparentMaterial(t *testing.T) {
+	w := DefaultWorld()
+	r := shape.Ray{
+		Origin: m.Point4(0, 0, -3),
+		Dir: m.Vector4(0, -math.Sqrt2/2.0, math.Sqrt2/2.0),
+	}
+	floor := shape.NewPlane()
+	floor.SetTf(m.Trans(0, -1, 0))
+	floor.O.Material.Reflective = 0.5
+	floor.O.Material.Transparency = 0.5
+	floor.O.Material.RefractiveIndex = 1.5
+	w.AddShape(&floor)
+
+	ball := shape.NewSphere()
+	ball.SetTf(m.Trans(0, -3.5, -0.5))
+	ball.O.Material.Color = m.Vec4{1, 0, 0}
+	ball.O.Material.Ambient = 0.5
+	w.AddShape(&ball)
+
+	xs := []shape.Intersection{{T: math.Sqrt2, S: &floor}}
+	comps := xs[0].Prepare(r, xs)
+	color := w.ShadeHit(comps, 5)
+	assert.True(t, color.ApproxEqual(m.Vec4{0.93391, 0.69643, 0.69243}))
 }

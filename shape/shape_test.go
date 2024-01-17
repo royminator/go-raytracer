@@ -479,18 +479,21 @@ func TestFindingN1AndN2AtVariousIntersections(t *testing.T) {
 
 	r := Ray{
 		Origin: m.Point4(0, 0, -4),
-		Dir: m.Vector4(0, 0, 1),
+		Dir:    m.Vector4(0, 0, 1),
 	}
 	isects := []Intersection{
-		{S: &a, T:2},
-		{S: &b, T:2.75},
-		{S: &c, T:3.25},
-		{S: &b, T:4.75},
-		{S: &c, T:5.25},
-		{S: &a, T:6},
+		{S: &a, T: 2},
+		{S: &b, T: 2.75},
+		{S: &c, T: 3.25},
+		{S: &b, T: 4.75},
+		{S: &c, T: 5.25},
+		{S: &a, T: 6},
 	}
 
-	type testData struct {i int; n1, n2 float64}
+	type testData struct {
+		i      int
+		n1, n2 float64
+	}
 	td := []testData{
 		{i: 0, n1: 1.0, n2: 1.5},
 		{i: 1, n1: 1.5, n2: 2.0},
@@ -517,4 +520,48 @@ func TestUnderPointIsOffsetBelowTheSurface(t *testing.T) {
 	comps := isect.Prepare(r, xs)
 	assert.Greater(t, comps.UnderPoint[2], m.EPSILON/2.0)
 	assert.Less(t, comps.Point[2], comps.UnderPoint[2])
+}
+
+func TestSchlickUnderTotalInternalReflection(t *testing.T) {
+	shape := NewGlassSphere()
+	r := Ray{
+		Origin: m.Point4(0, 0, math.Sqrt2/2.0),
+		Dir:    m.Vector4(0, 1, 0),
+	}
+	xs := []Intersection{
+		{T: -math.Sqrt2 / 2.0, S: &shape},
+		{T: math.Sqrt2 / 2.0, S: &shape},
+	}
+
+	comps := xs[1].Prepare(r, xs)
+	assert.Equal(t, 1.0, comps.Schlick())
+}
+
+func TestSchlickWithPerpendicularViewingAngle(t *testing.T) {
+	shape := NewGlassSphere()
+	r := Ray{
+		Origin: m.Point4(0, 0, 0),
+		Dir:    m.Vector4(0, 1, 0),
+	}
+	xs := []Intersection{
+		{T: -1, S: &shape},
+		{T: 1, S: &shape},
+	}
+
+	comps := xs[1].Prepare(r, xs)
+	assert.True(t, m.EqApprox(0.04, comps.Schlick()))
+}
+
+func TestSchlickWithSmallAngleAndN2GTN1(t *testing.T) {
+	shape := NewGlassSphere()
+	r := Ray{
+		Origin: m.Point4(0, 0.99, -2),
+		Dir:    m.Vector4(0, 0, 1),
+	}
+	xs := []Intersection{
+		{T: 1.8589, S: &shape},
+	}
+
+	comps := xs[0].Prepare(r, xs)
+	assert.True(t, m.EqApprox(0.48873, comps.Schlick()))
 }
