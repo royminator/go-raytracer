@@ -13,35 +13,6 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-type testPattern struct {
-	Tf    m.Mat4
-	InvTf m.Mat4
-}
-
-func newTestPattern() testPattern {
-	return testPattern{
-		Tf:    m.Mat4Ident(),
-		InvTf: m.Mat4Ident(),
-	}
-}
-
-func (tp *testPattern) SampleAt(p m.Vec4) m.Vec4 {
-	return m.Vec4{p[0], p[1], p[2]}
-}
-
-func (tp *testPattern) SetTf(tf m.Mat4) {
-	tp.Tf = tf
-	tp.InvTf = tf.Inv()
-}
-
-func (tp *testPattern) GetInvTf() m.Mat4 {
-	return tp.InvTf
-}
-
-func (tp *testPattern) GetTf() m.Mat4 {
-	return tp.Tf
-}
-
 func TestCreateRay(t *testing.T) {
 	origin := m.Point4(1, 2, 3)
 	direction := m.Vector4(1, 0, 0)
@@ -449,7 +420,7 @@ func TestStripesWhenPatternAndShapeTransformed(t *testing.T) {
 func TestPatternWithObjectTransformed(t *testing.T) {
 	s := NewSphere()
 	s.SetTf(m.Scale(2, 2, 2))
-	p := newTestPattern()
+	p := pattern.NewTestPattern()
 	s.SetPattern(&p)
 	actual := s.SamplePatternAt(m.Point4(2, 3, 4))
 	assert.Equal(t, m.Vec4{1, 1.5, 2}, actual)
@@ -457,7 +428,7 @@ func TestPatternWithObjectTransformed(t *testing.T) {
 
 func TestPatternWithPatternTransformed(t *testing.T) {
 	s := NewSphere()
-	p := newTestPattern()
+	p := pattern.NewTestPattern()
 	p.SetTf(m.Scale(2, 2, 2))
 	s.SetPattern(&p)
 	actual := s.SamplePatternAt(m.Point4(2, 3, 4))
@@ -467,7 +438,7 @@ func TestPatternWithPatternTransformed(t *testing.T) {
 func TestPatternWithShapeAndPatternTransformed(t *testing.T) {
 	s := NewSphere()
 	s.SetTf(m.Scale(2, 2, 2))
-	p := newTestPattern()
+	p := pattern.NewTestPattern()
 	p.SetTf(m.Trans(0.5, 1, 1.5))
 	s.SetPattern(&p)
 	actual := s.SamplePatternAt(m.Point4(2.5, 3, 3.5))
@@ -535,4 +506,15 @@ func TestFindingN1AndN2AtVariousIntersections(t *testing.T) {
 		assert.Equal(comps.N1, d.n1)
 		assert.Equal(comps.N2, d.n2)
 	}
+}
+
+func TestUnderPointIsOffsetBelowTheSurface(t *testing.T) {
+	r := Ray{Origin: m.Point4(0, 0, -5), Dir: m.Vector4(0, 0, 1)}
+	s := NewGlassSphere()
+	s.SetTf(m.Trans(0, 0, 1))
+	isect := Intersection{T: 5, S: &s}
+	xs := []Intersection{isect}
+	comps := isect.Prepare(r, xs)
+	assert.Greater(t, comps.UnderPoint[2], m.EPSILON/2.0)
+	assert.Less(t, comps.Point[2], comps.UnderPoint[2])
 }

@@ -70,7 +70,7 @@ func (v Vec4) Normalize() Vec4 {
 
 func (lhs Vec4) ApproxEqual(rhs Vec4) bool {
 	for i := range lhs {
-		if !eqApprox(lhs[i], rhs[i]) {
+		if !EqApprox(lhs[i], rhs[i]) {
 			return false
 		}
 	}
@@ -110,6 +110,6 @@ func (v Vec3) ToVec4() Vec4 {
 	return Vec4{v[0], v[1], v[2], 1}
 }
 
-func eqApprox(a, b float64) bool {
+func EqApprox(a, b float64) bool {
 	return math.Abs(a - b) < EPSILON
 }

@@ -34,6 +34,10 @@ type (
 	CheckersPattern struct {
 		PB PatternBase
 	}
+
+	TestPattern struct {
+		Tf, InvTf m.Mat4
+	}
 )
 
 func defaultPatternBase(a, b m.Vec4) PatternBase {
@@ -141,3 +145,28 @@ func (p *CheckersPattern) GetTf() m.Mat4 {
 func (p *CheckersPattern) GetInvTf() m.Mat4 {
 	return p.PB.InvTf
 }
+
+func NewTestPattern() TestPattern {
+	return TestPattern{
+		Tf:    m.Mat4Ident(),
+		InvTf: m.Mat4Ident(),
+	}
+}
+
+func (tp *TestPattern) SampleAt(p m.Vec4) m.Vec4 {
+	return m.Vec4{p[0], p[1], p[2]}
+}
+
+func (tp *TestPattern) SetTf(tf m.Mat4) {
+	tp.Tf = tf
+	tp.InvTf = tf.Inv()
+}
+
+func (tp *TestPattern) GetInvTf() m.Mat4 {
+	return tp.InvTf
+}
+
+func (tp *TestPattern) GetTf() m.Mat4 {
+	return tp.Tf
+}
+

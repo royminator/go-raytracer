@@ -1,6 +1,7 @@
 package world
 
 import (
+	"math"
 	"sort"
 
 	"roytracer/color"
@@ -53,13 +54,14 @@ func (w *World) ShadeHit(comps shape.IntersectionComps, remaining int) m.Vec4 {
 	surface := light.Lighting(comps.S.GetMat(), comps.S, w.Light, comps.OverPoint,
 		comps.Eye, comps.Normal, shadowed)
 	reflected := w.ReflectedColor(comps, remaining)
-	return surface.Add(reflected)
+	refracted := w.RefractedColor(comps, remaining)
+	return surface.Add(reflected).Add(refracted)
 }
 
 func (w *World) ColorAt(ray shape.Ray, remaining int) m.Vec4 {
 	isects := w.Intersect(ray)
 	if hit, isHit := shape.Hit(isects); isHit {
-		comps := hit.Prepare(ray)
+		comps := hit.Prepare(ray, isects)
 		return w.ShadeHit(comps, remaining)
 	}
 	return m.Vec4With(0)
@@ -91,4 +93,30 @@ func (w *World) ReflectedColor(comps shape.IntersectionComps, remaining int) m.V
 	}
 	color := w.ColorAt(reflectedRay, remaining-1)
 	return color.Mul(mat.Reflective)
+}
+
+func (w *World) RefractedColor(comps shape.IntersectionComps, remaining int) m.Vec4 {
+	if remaining == 0 {
+		return color.Black
+	}
+	if comps.S.GetMat().Transparency == 0.0 {
+		return color.Black
+	}
+	return w.hasTotalInternalReflection(comps, remaining)
+}
+
+func (w *World) hasTotalInternalReflection(comps shape.IntersectionComps, remaining int) m.Vec4 {
+	nRatio := comps.N1/comps.N2
+	cosI := comps.Eye.Dot(comps.Normal)
+	sin2t := nRatio*nRatio*(1.0 - cosI*cosI)
+	if sin2t > 1.0 {
+		return color.Black
+	}
+	cosT := math.Sqrt(1.0 - sin2t)
+	dir := comps.Normal.Mul(nRatio*cosI - cosT).Sub(comps.Eye.Mul(nRatio))
+	refractedRay := shape.Ray{
+		Origin: comps.UnderPoint,
+		Dir: dir,
+	}
+	return w.ColorAt(refractedRay, remaining-1).Mul(comps.S.GetMat().Transparency)
 }

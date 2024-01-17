@@ -3,10 +3,10 @@ package shape
 import (
 	"math"
 
+	"github.com/elliotchance/pie/v2"
 	m "roytracer/math"
 	"roytracer/mtl"
 	"roytracer/pattern"
-	"github.com/elliotchance/pie/v2"
 )
 
 type (
@@ -48,15 +48,16 @@ type (
 	}
 
 	IntersectionComps struct {
-		S         Shape
-		T         float64
-		Point     m.Vec4
-		Eye       m.Vec4
-		Normal    m.Vec4
-		Inside    bool
-		OverPoint m.Vec4
-		Reflect   m.Vec4
-		N1, N2    float64
+		S          Shape
+		T          float64
+		Point      m.Vec4
+		Eye        m.Vec4
+		Normal     m.Vec4
+		Inside     bool
+		OverPoint  m.Vec4
+		UnderPoint m.Vec4
+		Reflect    m.Vec4
+		N1, N2     float64
 	}
 )
 
@@ -256,20 +257,22 @@ func (i Intersection) Prepare(ray Ray, isects []Intersection) IntersectionComps 
 		normal = normal.Negate()
 	}
 	op := pos.Add(normal.Mul(m.EPSILON))
+	up := pos.Sub(normal.Mul(m.EPSILON))
 
 	n1, n2 := computeN(i, isects)
 
 	return IntersectionComps{
-		T:         i.T,
-		S:         i.S,
-		Point:     pos,
-		Eye:       eye,
-		Normal:    normal,
-		Inside:    inside,
-		OverPoint: op,
-		Reflect:   ray.Dir.Reflect(normal),
-		N1:        n1,
-		N2:        n2,
+		T:          i.T,
+		S:          i.S,
+		Point:      pos,
+		Eye:        eye,
+		Normal:     normal,
+		Inside:     inside,
+		OverPoint:  op,
+		UnderPoint: up,
+		Reflect:    ray.Dir.Reflect(normal),
+		N1:         n1,
+		N2:         n2,
 	}
 }
 

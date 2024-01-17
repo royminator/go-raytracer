@@ -238,7 +238,7 @@ func (mat Mat4) Det() float64 {
 
 func (mat Mat4) IsInvertible() (bool, float64) {
 	det := mat.Det()
-	return !eqApprox(det, 0.0), det
+	return !EqApprox(det, 0.0), det
 }
 
 func (mat Mat4) Inv() Mat4 {
@@ -259,7 +259,7 @@ func (mat Mat4) Inv() Mat4 {
 func (m1 Mat4) ApproxEqual(m2 Mat4) bool {
 	for m := 0; m < 4; m++ {
 		for n := 0; n < 4; n++ {
-			if !eqApprox(m1.At(m, n), m2.At(m, n)) {
+			if !EqApprox(m1.At(m, n), m2.At(m, n)) {
 				return false
 			}
 		}
