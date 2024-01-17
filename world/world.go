@@ -101,7 +101,7 @@ func (w *World) ReflectedColor(comps shape.IntersectionComps, remaining int) m.V
 }
 
 func (w *World) RefractedColor(comps shape.IntersectionComps, remaining int) m.Vec4 {
-	if remaining == 0 {
+	if remaining <= 0 {
 		return color.Black
 	}
 	if comps.S.GetMat().Transparency == 0.0 {

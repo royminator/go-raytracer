@@ -62,28 +62,28 @@ func (c *Camera) RayForPixel(px, py int) shape.Ray {
 	return shape.Ray{Origin: origin, Dir: dir}
 }
 
-func (c *Camera) Render(w *world.World) *gfx.Canvas {
+func (c *Camera) Render(w *world.World, recDepth int) *gfx.Canvas {
 	canvas := gfx.NewCanvas(uint32(c.Hsize), uint32(c.Vsize), gfx.ColorBlack)
-	// c.renderSequential(w, canvas)
-	c.renderParallel(w, canvas)
+	// c.renderSequential(w, canvas, depth)
+	c.renderParallel(w, canvas, recDepth)
 	return canvas
 }
 
-func (c *Camera) renderSequential(w *world.World, canvas *gfx.Canvas) {
+func (c *Camera) renderSequential(w *world.World, canvas *gfx.Canvas, depth int) {
 	for m := 0; m < c.Vsize; m++ {
 		for n := 0; n < c.Hsize; n++ {
-			c.computePixel(m, n, w, canvas)
+			c.computePixel(m, n, w, canvas, depth)
 		}
 	}
 }
 
-func (c *Camera) renderParallel(w *world.World, canvas *gfx.Canvas) {
+func (c *Camera) renderParallel(w *world.World, canvas *gfx.Canvas, depth int) {
 	var wg sync.WaitGroup
 	for m := 0; m < c.Vsize; m++ {
 		wg.Add(1)
 		go func(m int, w *world.World, canvas *gfx.Canvas) {
 			for n := 0; n < c.Hsize; n++ {
-				c.computePixel(m, n, w, canvas)
+				c.computePixel(m, n, w, canvas, depth)
 			}
 			wg.Done()
 		}(m, w, canvas)
@@ -91,8 +91,8 @@ func (c *Camera) renderParallel(w *world.World, canvas *gfx.Canvas) {
 	wg.Wait()
 }
 
-func (c *Camera) computePixel(m, n int, w *world.World, canvas *gfx.Canvas) {
+func (c *Camera) computePixel(m, n int, w *world.World, canvas *gfx.Canvas, depth int) {
 	ray := c.RayForPixel(n, m)
-	color := w.ColorAt(ray, 10)
+	color := w.ColorAt(ray, depth)
 	canvas.WritePixel(uint32(n), uint32(m), color)
 }
