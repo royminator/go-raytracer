@@ -565,3 +565,72 @@ func TestSchlickWithSmallAngleAndN2GTN1(t *testing.T) {
 	comps := xs[0].Prepare(r, xs)
 	assert.True(t, m.EqApprox(0.48873, comps.Schlick()))
 }
+
+func TestRayIntersectsCube(t *testing.T) {
+	c := NewCube()
+
+	type testData struct {
+		ray    Ray
+		t1, t2 float64
+	}
+	td := []testData{
+		{ray: Ray{Origin: m.Point4(5, 0.5, 0), Dir: m.Vector4(-1, 0, 0)}, t1: 4, t2: 6},
+		{ray: Ray{Origin: m.Point4(-5, 0.5, 0), Dir: m.Vector4(1, 0, 0)}, t1: 4, t2: 6},
+		{ray: Ray{Origin: m.Point4(0.5, 5, 0), Dir: m.Vector4(0, -1, 0)}, t1: 4, t2: 6},
+		{ray: Ray{Origin: m.Point4(0.5, -5, 0), Dir: m.Vector4(0, 1, 0)}, t1: 4, t2: 6},
+		{ray: Ray{Origin: m.Point4(0.5, 0, 5), Dir: m.Vector4(0, 0, -1)}, t1: 4, t2: 6},
+		{ray: Ray{Origin: m.Point4(0.5, 0, -5), Dir: m.Vector4(0, 0, 1)}, t1: 4, t2: 6},
+		{ray: Ray{Origin: m.Point4(0, 0.5, 0), Dir: m.Vector4(0, 0, 1)}, t1: -1, t2: 1},
+	}
+	assert := assert.New(t)
+	for _, d := range td {
+		xs := c.localIntersect(d.ray)
+		assert.Equal(2, len(xs))
+		assert.Equal(d.t1, xs[0].T)
+		assert.Equal(d.t2, xs[1].T)
+	}
+}
+
+func TestRayMissesCube(t *testing.T) {
+	c := NewCube()
+
+	td := []Ray{
+		{Origin: m.Point4(-2, 0, 0), Dir: m.Vector4(0.2673, 0.5345, 0.8018)},
+		{Origin: m.Point4(0, -2, 0), Dir: m.Vector4(0.8018, 0.2673, 0.5345)},
+		{Origin: m.Point4(0, 0, -2), Dir: m.Vector4(0.5345, 0.8018, 0.2673)},
+		{Origin: m.Point4(2, 0, 2), Dir: m.Vector4(0, 0, -1)},
+		{Origin: m.Point4(0, 2, 2), Dir: m.Vector4(0, -1, 0)},
+		{Origin: m.Point4(2, 2, 0), Dir: m.Vector4(-1, 0, 0)},
+	}
+
+	assert := assert.New(t)
+
+	for _, d := range td {
+		xs := c.localIntersect(d)
+		assert.Len(xs, 0)
+	}
+}
+
+func TestCubeNormalAt(t *testing.T) {
+	c := NewCube()
+	type testData struct {
+		point  m.Vec4
+		normal m.Vec4
+	}
+	td := []testData{
+		{point: m.Point4(1, 0.5, -0.8), normal: m.Vector4(1, 0, 0)},
+		{point: m.Point4(-1, -0.2, 0.9), normal: m.Vector4(-1, 0, 0)},
+		{point: m.Point4(-0.4, 1, -0.1), normal: m.Vector4(0, 1, 0)},
+		{point: m.Point4(0.3, -1, -0.7), normal: m.Vector4(0, -1, 0)},
+		{point: m.Point4(-0.6, 0.3, 1), normal: m.Vector4(0, 0, 1)},
+		{point: m.Point4(0.4, 0.4, -1), normal: m.Vector4(0, 0, -1)},
+		{point: m.Point4(1, 1, 1), normal: m.Vector4(1, 0, 0)},
+		{point: m.Point4(-1, -1, -1), normal: m.Vector4(-1, 0, 0)},
+	}
+
+	assert := assert.New(t)
+	for _, d := range td {
+		normal := c.localNormalAt(d.point)
+		assert.Equal(d.normal, normal)
+	}
+}

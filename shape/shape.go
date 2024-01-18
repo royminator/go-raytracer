@@ -30,6 +30,10 @@ type (
 		O Object
 	}
 
+	Cube struct {
+		O Object
+	}
+
 	Intersection struct {
 		S Shape
 		T float64
@@ -228,6 +232,103 @@ func (p *Plane) SamplePatternAt(point m.Vec4) m.Vec4 {
 
 func (p *Plane) SetPattern(pat pattern.Pattern) {
 	p.O.Material.Pattern = pat
+}
+
+// ////////////// CUBE ////////////////
+func NewCube() Cube {
+	return Cube{
+		O: defaultObject(),
+	}
+}
+
+func (c *Cube) GetTf() m.Mat4 {
+	return c.O.Tf
+}
+
+func (c *Cube) SetTf(tf m.Mat4) {
+	c.O.Tf = tf
+	c.O.InvTf = tf.Inv()
+}
+
+func (c *Cube) GetMat() mtl.Material {
+	return c.O.Material
+}
+
+func (c *Cube) SetMat(mtl mtl.Material) {
+	c.O.Material = mtl
+}
+
+func (c *Cube) Intersect(ray Ray) []Intersection {
+	localRay := ray.Transform(c.O.InvTf)
+	return c.localIntersect(localRay)
+}
+
+func (c *Cube) localIntersect(ray Ray) []Intersection {
+	xtmin, xtmax := checkAxis(ray.Origin[0], ray.Dir[0])
+	ytmin, ytmax := checkAxis(ray.Origin[1], ray.Dir[1])
+	ztmin, ztmax := checkAxis(ray.Origin[2], ray.Dir[2])
+
+	tmin := math.Max(math.Max(xtmin, ytmin), ztmin)
+	tmax := math.Min(math.Min(xtmax, ytmax), ztmax)
+
+	if tmin > tmax {
+		return []Intersection{}
+	}
+
+	return []Intersection{{T: tmin, S: c}, {T: tmax, S: c}}
+}
+
+func checkAxis(origin float64, dir float64) (float64, float64) {
+	tmin_numerator := -1 - origin
+	tmax_numerator := 1 - origin
+
+	inf := math.Inf(1)
+	tmin := tmin_numerator * inf
+	tmax := tmax_numerator * inf
+
+	if math.Abs(dir) >= m.EPSILON {
+		tmin = tmin_numerator / dir
+		tmax = tmax_numerator / dir
+	}
+
+	if tmin > tmax {
+		return tmax, tmin
+	}
+	return tmin, tmax
+}
+
+func (c *Cube) GetSavedRay() Ray {
+	return c.O.SavedRay
+}
+
+func (c *Cube) NormalAt(point m.Vec4) m.Vec4 {
+	localPoint := c.O.InvTf.MulVec(point)
+	localNormal := c.localNormalAt(localPoint)
+	nWorld := c.O.InvTf.Tpose().MulVec(localNormal)
+	nWorld[3] = 0
+	return nWorld.Normalize()
+}
+
+func (c *Cube) localNormalAt(point m.Vec4) m.Vec4 {
+	maxc := math.Max(math.Max(math.Abs(point[0]), math.Abs(point[1])), math.Abs(point[2]))
+	if maxc == math.Abs(point[0]) {
+		return m.Vector4(point[0], 0, 0)
+	}
+	if maxc == math.Abs(point[1]) {
+		return m.Vector4(0, point[1], 0)
+	}
+	return m.Vector4(0, 0, point[2])
+}
+
+func (c *Cube) SamplePatternAt(point m.Vec4) m.Vec4 {
+	objPoint := c.O.InvTf.MulVec(point)
+	pattern := c.O.Material.Pattern
+	patternPoint := pattern.GetInvTf().MulVec(objPoint)
+	return pattern.SampleAt(patternPoint)
+}
+
+func (c *Cube) SetPattern(p pattern.Pattern) {
+	c.O.Material.Pattern = p
 }
 
 // ////////////// INTERSECTIONS ////////////////

@@ -16,11 +16,10 @@ import (
 )
 
 var (
-	CameraPos     = m.Point4(-12, 17, -12)
+	CameraPos     = m.Point4(-10, 9, -25)
 	LightPos      = m.Point4(8, 30, -16)
 	SpherePos     = m.Vec4{-0.5, 2, 6.0, 1}
-	// SpherePos     = m.Vec4{CameraPos[0], 2, CameraPos[2]}
-	CameraViewPos = m.Vec4{-0.5, 2, -0.5, 1}
+	CameraViewPos = m.Vec4{-0.5, 5, -0.5, 1}
 )
 
 func main() {
@@ -41,15 +40,16 @@ func main() {
 }
 
 func arrangeObjects() []shape.Shape {
-	middle := createMiddleSphere()
-	other := createOtherSphere()
+	bigSphere := createBigSphere()
+	smallSphere := createSmallSphere()
 	floor := createFloor()
+	cube := createCube()
 	return []shape.Shape{
-		middle, other, floor,
+		bigSphere, smallSphere, floor, cube,
 	}
 }
 
-func createMiddleSphere() *shape.Sphere {
+func createBigSphere() *shape.Sphere {
 	s := shape.NewSphere()
 	mtl := mtl.Material{
 		Transparency:    1.0,
@@ -62,11 +62,11 @@ func createMiddleSphere() *shape.Sphere {
 		RefractiveIndex: 2.0,
 	}
 	s.SetMat(mtl)
-	s.SetTf(m.Trans(SpherePos[0], SpherePos[1], SpherePos[2]).Mul(m.Scale(10, 10, 10)))
+	s.SetTf(m.Trans(SpherePos[0], 10, SpherePos[2]).Mul(m.Scale(10, 10, 10)))
 	return &s
 }
 
-func createOtherSphere() *shape.Sphere {
+func createSmallSphere() *shape.Sphere {
 	s := shape.NewSphere()
 	mtl := mtl.Material{
 		Transparency:    0.0,
@@ -79,17 +79,37 @@ func createOtherSphere() *shape.Sphere {
 		RefractiveIndex: 0.9,
 	}
 	s.SetMat(mtl)
-	s.SetTf(m.Trans(SpherePos[0]+2, SpherePos[1], SpherePos[2]-15).Mul(m.Scale(3, 3, 3)))
+	s.SetTf(m.Trans(SpherePos[0]+9, 3, SpherePos[2]-12).Mul(m.Scale(3, 3, 3)))
 	return &s
+}
+
+func createCube() *shape.Cube {
+	c := shape.NewCube()
+	mtl := mtl.Material{
+		Transparency:    0.0,
+		Reflective:      0.0,
+		Ambient:         0.2,
+		Diffuse:         0.7,
+		Color:           m.Vec4{0.8, 0.8, 0.4},
+		Specular:        0.3,
+		Shininess:       50,
+		RefractiveIndex: 0.0,
+	}
+	c.SetMat(mtl)
+	tf := m.Trans(SpherePos[0]-4, 2, SpherePos[2]-13)
+	tf = tf.Mul(m.Scale(2, 2, 2))
+	tf = tf.Mul(m.RotY(math.Pi/3.2))
+	c.SetTf(tf)
+	return &c
 }
 
 func createFloor() *shape.Plane {
 	c1 := m.Vec4{0.878, 0.525, 0.275}
 	c2 := m.Vec4{0.357, 0.478, 0.71}
-	pattern := pattern.NewCheckersPattern(c1, c2)
+	pattern := pattern.NewRingPattern(c1, c2)
 
 	floor := shape.NewPlane()
-	floor.SetTf(m.Scale(5, 0.01, 5))
+	floor.SetTf(m.Scale(3, 0.01, 3))
 	floor.O.Material = mtl.DefaultMaterial()
 	floor.O.Material.Color = m.Vec4{1, 0.9, 0.9, 0}
 	floor.O.Material.Specular = 0
@@ -98,7 +118,7 @@ func createFloor() *shape.Plane {
 }
 
 func setupCamera() camera.Camera {
-	camera := camera.NewCamera(1200, 700, math.Pi/2.0)
+	camera := camera.NewCamera(1400, 1200, math.Pi/2.0)
 	from := CameraPos
 	to := CameraViewPos
 	up := m.Vector4(0, 1, 0)
