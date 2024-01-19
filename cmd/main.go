@@ -13,6 +13,8 @@ import (
 	"roytracer/pattern"
 	"roytracer/shape"
 	"roytracer/world"
+	"runtime/trace"
+	"os"
 )
 
 var (
@@ -23,6 +25,10 @@ var (
 )
 
 func main() {
+	f, _ := os.Create("trace.out")
+	trace.Start(f)
+	defer trace.Stop()
+
 	w := world.World{
 		Light: light.PointLight{
 			Pos:       LightPos,
