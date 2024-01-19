@@ -34,6 +34,18 @@ type (
 		O Object
 	}
 
+	Cylinder struct {
+		O        Object
+		Min, Max float64
+		Closed   bool
+	}
+
+	Cone struct {
+		O        Object
+		Min, Max float64
+		Closed   bool
+	}
+
 	Intersection struct {
 		S Shape
 		T float64
@@ -331,6 +343,272 @@ func (c *Cube) SetPattern(p pattern.Pattern) {
 	c.O.Material.Pattern = p
 }
 
+// ////////////// CYLIDER ////////////////
+func NewCylinder() Cylinder {
+	return Cylinder{
+		O:      defaultObject(),
+		Min:    math.Inf(-1),
+		Max:    math.Inf(1),
+		Closed: false,
+	}
+}
+
+func (c *Cylinder) GetTf() m.Mat4 {
+	return c.O.Tf
+}
+
+func (c *Cylinder) SetTf(tf m.Mat4) {
+	c.O.Tf = tf
+	c.O.InvTf = tf.Inv()
+}
+
+func (c *Cylinder) GetMat() mtl.Material {
+	return c.O.Material
+}
+
+func (c *Cylinder) SetMat(mtl mtl.Material) {
+	c.O.Material = mtl
+}
+
+func (c *Cylinder) Intersect(ray Ray) []Intersection {
+	localRay := ray.Transform(c.O.InvTf)
+	return c.localIntersect(localRay)
+}
+
+func (cyl *Cylinder) localIntersect(ray Ray) []Intersection {
+	a := ray.Dir[0]*ray.Dir[0] + ray.Dir[2]*ray.Dir[2]
+
+	var xs []Intersection
+
+	if !m.EqApprox(a, 0.0) {
+		cyl.intersectWalls(ray, &xs, a)
+	}
+
+	cyl.intersectCaps(ray, &xs)
+	return xs
+}
+
+func (cyl *Cylinder) intersectWalls(ray Ray, xs *[]Intersection, a float64) {
+	b := 2*ray.Origin[0]*ray.Dir[0] + 2*ray.Origin[2]*ray.Dir[2]
+	c := ray.Origin[0]*ray.Origin[0] + ray.Origin[2]*ray.Origin[2] - 1.0
+
+	disc := b*b - 4*a*c
+
+	if disc < 0.0 {
+		return
+	}
+
+	t0 := (-b - math.Sqrt(disc)) / (2 * a)
+	t1 := (-b + math.Sqrt(disc)) / (2 * a)
+
+	if t0 > t1 {
+		t0, t1 = t1, t0
+	}
+
+	y0 := ray.Origin[1] + t0*ray.Dir[1]
+	if cyl.Min < y0 && y0 < cyl.Max {
+		*xs = append(*xs, Intersection{T: t0, S: cyl})
+	}
+
+	y1 := ray.Origin[1] + t1*ray.Dir[1]
+	if cyl.Min < y1 && y1 < cyl.Max {
+		*xs = append(*xs, Intersection{T: t1, S: cyl})
+	}
+}
+
+func (c *Cylinder) intersectCaps(ray Ray, isects *[]Intersection) {
+	if !c.Closed || m.EqApprox(ray.Dir[1], 0.0) {
+		return
+	}
+
+	t := (c.Min - ray.Origin[1]) / ray.Dir[1]
+	if c.checkCaps(ray, t) {
+		*isects = append(*isects, Intersection{T: t, S: c})
+	}
+
+	t = (c.Max - ray.Origin[1]) / ray.Dir[1]
+	if c.checkCaps(ray, t) {
+		*isects = append(*isects, Intersection{T: t, S: c})
+	}
+}
+
+func (c *Cylinder) checkCaps(ray Ray, t float64) bool {
+	x := ray.Origin[0] + t*ray.Dir[0]
+	z := ray.Origin[2] + t*ray.Dir[2]
+	return (x*x + z*z) <= 1.0
+}
+
+func (c *Cylinder) GetSavedRay() Ray {
+	return c.O.SavedRay
+}
+
+func (c *Cylinder) NormalAt(point m.Vec4) m.Vec4 {
+	localPoint := c.O.InvTf.MulVec(point)
+	localNormal := c.localNormalAt(localPoint)
+	nWorld := c.O.InvTf.Tpose().MulVec(localNormal)
+	nWorld[3] = 0
+	return nWorld.Normalize()
+}
+
+func (c *Cylinder) localNormalAt(point m.Vec4) m.Vec4 {
+	dist := point[0]*point[0] + point[2]*point[2]
+	if dist < 1 && point[1] >= (c.Max - m.EPSILON) {
+		return m.Vector4(0, 1, 0)
+	}
+	if dist < 1 && point[1] <= (c.Min + m.EPSILON) {
+		return m.Vector4(0, -1, 0)
+	}
+	return m.Vector4(point[0], 0, point[2])
+}
+
+func (c *Cylinder) SamplePatternAt(point m.Vec4) m.Vec4 {
+	objPoint := c.O.InvTf.MulVec(point)
+	pattern := c.O.Material.Pattern
+	patternPoint := pattern.GetInvTf().MulVec(objPoint)
+	return pattern.SampleAt(patternPoint)
+}
+
+func (c *Cylinder) SetPattern(p pattern.Pattern) {
+	c.O.Material.Pattern = p
+}
+
+// ////////////// CONE ////////////////
+func NewCone() Cone {
+	return Cone{
+		O:      defaultObject(),
+		Min:    math.Inf(-1),
+		Max:    math.Inf(1),
+		Closed: false,
+	}
+}
+
+func (c *Cone) GetTf() m.Mat4 {
+	return c.O.Tf
+}
+
+func (c *Cone) SetTf(tf m.Mat4) {
+	c.O.Tf = tf
+	c.O.InvTf = tf.Inv()
+}
+
+func (c *Cone) GetMat() mtl.Material {
+	return c.O.Material
+}
+
+func (c *Cone) SetMat(mtl mtl.Material) {
+	c.O.Material = mtl
+}
+
+func (c *Cone) Intersect(ray Ray) []Intersection {
+	localRay := ray.Transform(c.O.InvTf)
+	return c.localIntersect(localRay)
+}
+
+func (cone *Cone) localIntersect(ray Ray) []Intersection {
+	a := ray.Dir[0]*ray.Dir[0] - ray.Dir[1]*ray.Dir[1] + ray.Dir[2]*ray.Dir[2]
+
+	b := 2*ray.Origin[0]*ray.Dir[0] - 2*ray.Origin[1]*ray.Dir[1] + 2*ray.Origin[2]*ray.Dir[2]
+
+	c := ray.Origin[0]*ray.Origin[0] - ray.Origin[1]*ray.Origin[1] + ray.Origin[2]*ray.Origin[2]
+
+
+	disc := b*b - 4*a*c
+
+	var xs []Intersection
+	if disc < 0.0 {
+		return xs
+	}
+
+	if m.EqApprox(a, 0.0) && m.EqApprox(b, 0.0) {
+		return []Intersection{}
+	}
+
+	if m.EqApprox(a, 0.0) && !m.EqApprox(b, 0.0) {
+		xs = append(xs, Intersection{T: -c/(2*b), S: cone})
+	}
+
+	t0 := (-b - math.Sqrt(disc)) / (2 * a)
+	t1 := (-b + math.Sqrt(disc)) / (2 * a)
+
+	if t0 > t1 {
+		t0, t1 = t1, t0
+	}
+
+	y0 := ray.Origin[1] + t0*ray.Dir[1]
+	if cone.Min < y0 && y0 < cone.Max {
+		xs = append(xs, Intersection{T: t0, S: cone})
+	}
+
+	y1 := ray.Origin[1] + t1*ray.Dir[1]
+	if cone.Min < y1 && y1 < cone.Max {
+		xs = append(xs, Intersection{T: t1, S: cone})
+	}
+
+	cone.intersectCaps(ray, &xs)
+	return xs
+}
+
+func (c *Cone) intersectCaps(ray Ray, isects *[]Intersection) {
+	if !c.Closed || m.EqApprox(ray.Dir[1], 0.0) {
+		return
+	}
+
+	t := (c.Min - ray.Origin[1]) / ray.Dir[1]
+	if c.checkCaps(ray, t, c.Min) {
+		*isects = append(*isects, Intersection{T: t, S: c})
+	}
+
+	t = (c.Max - ray.Origin[1]) / ray.Dir[1]
+	if c.checkCaps(ray, t, c.Max) {
+		*isects = append(*isects, Intersection{T: t, S: c})
+	}
+}
+
+func (c *Cone) checkCaps(ray Ray, t, y float64) bool {
+	x := ray.Origin[0] + t*ray.Dir[0]
+	z := ray.Origin[2] + t*ray.Dir[2]
+	return (x*x + z*z) <= math.Abs(y)
+}
+
+func (c *Cone) GetSavedRay() Ray {
+	return c.O.SavedRay
+}
+
+func (c *Cone) NormalAt(point m.Vec4) m.Vec4 {
+	localPoint := c.O.InvTf.MulVec(point)
+	localNormal := c.localNormalAt(localPoint)
+	nWorld := c.O.InvTf.Tpose().MulVec(localNormal)
+	nWorld[3] = 0
+	return nWorld.Normalize()
+}
+
+func (c *Cone) localNormalAt(point m.Vec4) m.Vec4 {
+	dist := point[0]*point[0] + point[2]*point[2]
+	if dist < 1 && point[1] >= (c.Max - m.EPSILON) {
+		return m.Vector4(0, 1, 0)
+	}
+	if dist < 1 && point[1] <= (c.Min + m.EPSILON) {
+		return m.Vector4(0, -1, 0)
+	}
+
+	y := math.Sqrt(point[0]*point[0]+point[2]*point[2])
+	if point[1] > 0.0 {
+		y = -y
+	}
+
+	return m.Vector4(point[0], y, point[2])
+}
+
+func (c *Cone) SamplePatternAt(point m.Vec4) m.Vec4 {
+	objPoint := c.O.InvTf.MulVec(point)
+	pattern := c.O.Material.Pattern
+	patternPoint := pattern.GetInvTf().MulVec(objPoint)
+	return pattern.SampleAt(patternPoint)
+}
+
+func (c *Cone) SetPattern(p pattern.Pattern) {
+	c.O.Material.Pattern = p
+}
 // ////////////// INTERSECTIONS ////////////////
 func Intersections(isects ...Intersection) []Intersection {
 	return isects

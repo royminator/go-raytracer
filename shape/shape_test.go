@@ -634,3 +634,241 @@ func TestCubeNormalAt(t *testing.T) {
 		assert.Equal(d.normal, normal)
 	}
 }
+
+func TestRayMissesCylinder(t *testing.T) {
+	c := NewCylinder()
+
+	testData := []Ray{
+		{Origin: m.Point4(1, 0, 0), Dir: m.Vector4(0, 1, 0)},
+		{Origin: m.Point4(0, 0, 0), Dir: m.Vector4(0, 1, 0)},
+		{Origin: m.Point4(0, 0, -5), Dir: m.Vector4(1, 1, 1)},
+	}
+
+	assert := assert.New(t)
+	for _, d := range testData {
+		r := d
+		r.Dir = r.Dir.Normalize()
+		xs := c.localIntersect(r)
+		assert.Len(xs, 0)
+	}
+}
+
+func TestRayHitsCylinder(t *testing.T) {
+	c := NewCylinder()
+
+	type testData struct {
+		origin, dir m.Vec4
+		t0, t1      float64
+	}
+	td := []testData{
+		{origin: m.Point4(1, 0, -5), dir: m.Vector4(0, 0, 1), t0: 5, t1: 5},
+		{origin: m.Point4(0, 0, -5), dir: m.Vector4(0, 0, 1), t0: 4, t1: 6},
+		{origin: m.Point4(0.5, 0, -5), dir: m.Vector4(0.1, 1, 1), t0: 6.80798, t1: 7.08872},
+	}
+
+	assert := assert.New(t)
+
+	for _, d := range td {
+		r := Ray{
+			Origin: d.origin,
+			Dir:    d.dir.Normalize(),
+		}
+		xs := c.localIntersect(r)
+		assert.Len(xs, 2)
+		assert.True(m.EqApprox(d.t0, xs[0].T))
+		assert.True(m.EqApprox(d.t1, xs[1].T))
+	}
+}
+
+func TestNormalOnCylinder(t *testing.T) {
+	c := NewCylinder()
+
+	type testData struct{ point, normal m.Vec4 }
+	td := []testData{
+		{point: m.Point4(1, 0, 0), normal: m.Vector4(1, 0, 0)},
+		{point: m.Point4(0, 5, -1), normal: m.Vector4(0, 0, -1)},
+		{point: m.Point4(0, -2, 1), normal: m.Vector4(0, 0, 1)},
+		{point: m.Point4(-1, 1, 0), normal: m.Vector4(-1, 0, 0)},
+	}
+
+	assert := assert.New(t)
+
+	for _, d := range td {
+		assert.Equal(d.normal, c.localNormalAt(d.point))
+	}
+}
+
+func TestDefaultMinAndMaxForCylinder(t *testing.T) {
+	c := NewCylinder()
+	assert.Equal(t, math.Inf(-1), c.Min)
+	assert.Equal(t, math.Inf(1), c.Max)
+}
+
+func TestIntersectingAConstrainedCylinder(t *testing.T) {
+	c := NewCylinder()
+	c.Min = 1.0
+	c.Max = 2.0
+
+	type testdata struct {
+		point, dir m.Vec4
+		count      int
+	}
+	td := []testdata{
+		{point: m.Point4(0, 1.5, 0), dir: m.Vector4(0.1, 1, 0), count: 0},
+		{point: m.Point4(0, 3, -5), dir: m.Vector4(0, 0, 1), count: 0},
+		{point: m.Point4(0, 0, -5), dir: m.Vector4(0, 0, 1), count: 0},
+		{point: m.Point4(0, 2, -5), dir: m.Vector4(0, 0, 1), count: 0},
+		{point: m.Point4(0, 1, -5), dir: m.Vector4(0, 0, 1), count: 0},
+		{point: m.Point4(0, 1.5, -2), dir: m.Vector4(0, 0, 1), count: 2},
+	}
+
+	assert := assert.New(t)
+
+	for _, d := range td {
+		r := Ray{
+			Origin: d.point,
+			Dir:    d.dir.Normalize(),
+		}
+		xs := c.localIntersect(r)
+		assert.Len(xs, d.count)
+	}
+}
+
+func TestDefaultClosedValueForCylinder(t *testing.T) {
+	c := NewCylinder()
+	assert.False(t, c.Closed)
+}
+
+func TestIntersectingCapsOfCylinders(t *testing.T) {
+	c := NewCylinder()
+	c.Min = 1
+	c.Max = 2
+	c.Closed = true
+
+	type testdata struct {
+		point, dir m.Vec4
+		count      int
+	}
+	td := []testdata{
+		{point: m.Point4(0, 3, 0), dir: m.Vector4(0, -1, 0), count: 2},
+		{point: m.Point4(0, 3, -2), dir: m.Vector4(0, -1, 2), count: 2},
+		{point: m.Point4(0, 4, -2), dir: m.Vector4(0, -1, 1), count: 2},
+		{point: m.Point4(0, 0, -2), dir: m.Vector4(0, 1, 2), count: 2},
+		{point: m.Point4(0, -1, -2), dir: m.Vector4(0, 1, 1), count: 2},
+	}
+
+	assert := assert.New(t)
+
+	for _, d := range td {
+		r := Ray{
+			Origin: d.point,
+			Dir:    d.dir.Normalize(),
+		}
+		xs := c.localIntersect(r)
+		assert.Len(xs, d.count)
+	}
+}
+
+func TestNormalOnCylinderEndCaps(t *testing.T) {
+	c := NewCylinder()
+	c.Min = 1.0
+	c.Max = 2.0
+	c.Closed = true
+
+	type testdata struct{ point, normal m.Vec4 }
+	td := []testdata{
+		{point: m.Point4(0, 1, 0), normal: m.Vector4(0, -1, 0)},
+		{point: m.Point4(0.5, 1, 0), normal: m.Vector4(0, -1, 0)},
+		{point: m.Point4(0, 1, 0.5), normal: m.Vector4(0, -1, 0)},
+		{point: m.Point4(0, 2, 0), normal: m.Vector4(0, 1, 0)},
+		{point: m.Point4(0.5, 2, 0), normal: m.Vector4(0, 1, 0)},
+		{point: m.Point4(0, 2, 0.5), normal: m.Vector4(0, 1, 0)},
+	}
+
+	assert := assert.New(t)
+
+	for _, d := range td {
+		assert.Equal(d.normal, c.localNormalAt(d.point))
+	}
+}
+
+func TestIntersectConeWithRay(t *testing.T) {
+	c := NewCone()
+
+	type testdata struct {
+		origin, dir m.Vec4
+		t0, t1      float64
+	}
+
+	td := []testdata{
+		{origin: m.Point4(0, 0, -5), dir: m.Vector4(0, 0, 1), t0: 5, t1: 5},
+		{origin: m.Point4(0, 0, -5), dir: m.Vector4(1, 1, 1), t0: 8.66025, t1: 8.66025},
+		{origin: m.Point4(1, 1, -5), dir: m.Vector4(-0.5, -1, 1), t0: 4.55006, t1: 49.44994},
+	}
+
+	assert := assert.New(t)
+
+	for _, d := range td {
+		r := Ray{
+			Origin: d.origin,
+			Dir: d.dir.Normalize(),
+		}
+		xs := c.localIntersect(r)
+		assert.Len(xs, 2)
+		assert.True(m.EqApprox(d.t0, xs[0].T))
+		assert.True(m.EqApprox(d.t1, xs[1].T))
+	}
+}
+
+func TestIntersectConeWithARayParallelToOneOfItsHalves(t *testing.T) {
+	c := NewCone()
+	r := Ray{
+		Origin: m.Point4(0, 0, -1),
+		Dir: m.Vector4(0, 1, 1).Normalize(),
+	}
+	xs := c.localIntersect(r)
+	assert.Len(t, xs, 1)
+	assert.True(t, m.EqApprox(xs[0].T, 0.35355))
+}
+
+func TestIntersectConeEndCaps(t *testing.T) {
+	c := NewCone()
+	c.Min = -0.5
+	c.Max = 0.5
+	c.Closed = true
+
+	type testdata struct {origin, dir m.Vec4; count int}
+	td := []testdata{
+		{origin: m.Point4(0, 0, -5), dir: m.Vector4(0, 1, 0), count: 0},
+		{origin: m.Point4(0, 0, -0.25), dir: m.Vector4(0, 1, 1), count: 2},
+		{origin: m.Point4(0, 0, -0.25), dir: m.Vector4(0, 1, 0), count: 4},
+	}
+
+	assert := assert.New(t)
+
+	for _, d := range td {
+		r := Ray{
+			Origin: d.origin,
+			Dir: d.dir.Normalize(),
+		}
+		xs := c.localIntersect(r)
+		assert.Len(xs, d.count)
+	}
+}
+
+func TestConeNormal(t *testing.T) {
+	c := NewCone()
+	
+	type testdata struct {point, normal m.Vec4}
+	td := []testdata{
+		{point: m.Point4(0, 0, 0), normal: m.Vector4(0, 0, 0)},
+		{point: m.Point4(1, 1, 1), normal: m.Vector4(1, -math.Sqrt2, 1)},
+		{point: m.Point4(-1, -1, 0), normal: m.Vector4(-1, 1, 0)},
+	}
+
+	assert := assert.New(t)
+
+	for _, d := range td {
+		assert.Equal(d.normal, c.localNormalAt(d.point))
+	}
+}

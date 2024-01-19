@@ -50,8 +50,10 @@ func arrangeObjects() []shape.Shape {
 	smallSphere := createSmallSphere()
 	floor := createFloor()
 	cube := createCube()
+	cylinder := createCylinder()
+	cone := createCone()
 	return []shape.Shape{
-		bigSphere, smallSphere, floor, cube,
+		bigSphere, smallSphere, floor, cube, cylinder, cone,
 	}
 }
 
@@ -109,6 +111,53 @@ func createCube() *shape.Cube {
 	return &c
 }
 
+func createCylinder() *shape.Cylinder {
+	c := shape.NewCylinder()
+	c.Min = 0
+	c.Max = 1
+	c.Closed = true
+
+	mtl := mtl.Material{
+		Transparency:    0.0,
+		Reflective:      0.1,
+		Ambient:         0.2,
+		Diffuse:         0.7,
+		Color:           m.Vec4{0.73, 0.2, 0.36},
+		Specular:        0.3,
+		Shininess:       300,
+		RefractiveIndex: 1.0,
+	}
+	c.SetMat(mtl)
+	tf := m.Trans(SpherePos[0]-11, 0, SpherePos[2]-8)
+	tf = tf.Mul(m.Scale(3, 8, 3))
+	c.SetTf(tf)
+	return &c
+}
+
+func createCone() *shape.Cone {
+	c := shape.NewCone()
+	c.Min = 0
+	c.Max = 2
+	c.Closed = true
+
+	mtl := mtl.Material{
+		Transparency:    0.0,
+		Reflective:      0.0,
+		Ambient:         0.2,
+		Diffuse:         0.7,
+		Color:           m.Vec4{0.2, 0.73, 0.73},
+		Specular:        0.3,
+		Shininess:       50,
+		RefractiveIndex: 0.0,
+	}
+	c.SetMat(mtl)
+	tf := m.Trans(SpherePos[0]+3, 10, SpherePos[2]-13)
+	tf = tf.Mul(m.Scale(2, 5, 2))
+	tf = tf.Mul(m.RotZ(math.Pi))
+	c.SetTf(tf)
+	return &c
+}
+
 func createFloor() *shape.Plane {
 	c1 := m.Vec4{0.878, 0.525, 0.275}
 	c2 := m.Vec4{0.357, 0.478, 0.71}
@@ -120,6 +169,8 @@ func createFloor() *shape.Plane {
 	floor.O.Material.Color = m.Vec4{1, 0.9, 0.9, 0}
 	floor.O.Material.Specular = 0
 	floor.O.Material.Pattern = &pattern
+	floor.O.Material.Shininess = 300
+	floor.O.Material.Reflective = 0.8
 	return &floor
 }
 
