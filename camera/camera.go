@@ -79,8 +79,8 @@ func (c *Camera) renderSequential(w *world.World, canvas *gfx.Canvas, depth int)
 
 func (c *Camera) renderParallel(w *world.World, canvas *gfx.Canvas, depth int) {
 	var wg sync.WaitGroup
+	wg.Add(c.Vsize)
 	for m := 0; m < c.Vsize; m++ {
-		wg.Add(1)
 		go func(m int, w *world.World, canvas *gfx.Canvas) {
 			for n := 0; n < c.Hsize; n++ {
 				c.computePixel(m, n, w, canvas, depth)

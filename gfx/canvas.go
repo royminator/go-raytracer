@@ -41,6 +41,7 @@ var (
 
 func NewCanvas(width, height uint32, color m.Vec4) *Canvas {
 	pixels := make([][]m.Vec4, height)
+
 	for i := range pixels {
 		row := make([]m.Vec4, width)
 		for n := range row {
@@ -48,6 +49,7 @@ func NewCanvas(width, height uint32, color m.Vec4) *Canvas {
 		}
 		pixels[i] = row
 	}
+
 	return &Canvas{
 		Width:  width,
 		Height: height,

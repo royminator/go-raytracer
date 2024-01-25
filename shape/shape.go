@@ -82,10 +82,9 @@ func (r Ray) Pos(t float64) m.Vec4 {
 	return r.Origin.Add(r.Dir.Mul(t))
 }
 
-func (r Ray) Transform(tf m.Mat4) Ray {
-	origin := tf.MulVec(r.Origin)
-	dir := tf.MulVec(r.Dir)
-	return Ray{Origin: origin, Dir: dir}
+func (r *Ray) Transform(tf m.Mat4) {
+	r.Origin = tf.MulVec(r.Origin)
+	r.Dir = tf.MulVec(r.Dir)
 }
 
 // ////////////// SPHERE ////////////////
@@ -111,8 +110,8 @@ func NewGlassSphere() Sphere {
 }
 
 func (s *Sphere) Intersect(r Ray) []Intersection {
-	localRay := r.Transform(s.O.InvTf)
-	return s.localIntersect(localRay)
+	r.Transform(s.O.InvTf)
+	return s.localIntersect(r)
 }
 
 func (s *Sphere) localIntersect(r Ray) []Intersection {
@@ -125,8 +124,10 @@ func (s *Sphere) localIntersect(r Ray) []Intersection {
 	if discriminant < 0 {
 		return []Intersection{}
 	}
-	t1 := (-b - math.Sqrt(discriminant)) / (2 * a)
-	t2 := (-b + math.Sqrt(discriminant)) / (2 * a)
+	sqrtDiscriminant := math.Sqrt(discriminant)
+	twoA := 2 * a
+	t1 := (-b - sqrtDiscriminant) / twoA
+	t2 := (-b + sqrtDiscriminant) / twoA
 	if t1 < t2 {
 		return []Intersection{
 			{S: s, T: t1},
@@ -223,8 +224,8 @@ func (p *Plane) GetSavedRay() Ray {
 }
 
 func (p *Plane) Intersect(ray Ray) []Intersection {
-	localRay := ray.Transform(p.O.InvTf)
-	return p.localIntersect(localRay)
+	ray.Transform(p.O.InvTf)
+	return p.localIntersect(ray)
 }
 
 func (p *Plane) NormalAt(point m.Vec4) m.Vec4 {
@@ -271,8 +272,8 @@ func (c *Cube) SetMat(mtl mtl.Material) {
 }
 
 func (c *Cube) Intersect(ray Ray) []Intersection {
-	localRay := ray.Transform(c.O.InvTf)
-	return c.localIntersect(localRay)
+	ray.Transform(c.O.InvTf)
+	return c.localIntersect(ray)
 }
 
 func (c *Cube) localIntersect(ray Ray) []Intersection {
@@ -371,8 +372,8 @@ func (c *Cylinder) SetMat(mtl mtl.Material) {
 }
 
 func (c *Cylinder) Intersect(ray Ray) []Intersection {
-	localRay := ray.Transform(c.O.InvTf)
-	return c.localIntersect(localRay)
+	ray.Transform(c.O.InvTf)
+	return c.localIntersect(ray)
 }
 
 func (cyl *Cylinder) localIntersect(ray Ray) []Intersection {
@@ -500,8 +501,8 @@ func (c *Cone) SetMat(mtl mtl.Material) {
 }
 
 func (c *Cone) Intersect(ray Ray) []Intersection {
-	localRay := ray.Transform(c.O.InvTf)
-	return c.localIntersect(localRay)
+	ray.Transform(c.O.InvTf)
+	return c.localIntersect(ray)
 }
 
 func (cone *Cone) localIntersect(ray Ray) []Intersection {
@@ -609,6 +610,7 @@ func (c *Cone) SamplePatternAt(point m.Vec4) m.Vec4 {
 func (c *Cone) SetPattern(p pattern.Pattern) {
 	c.O.Material.Pattern = p
 }
+
 // ////////////// INTERSECTIONS ////////////////
 func Intersections(isects ...Intersection) []Intersection {
 	return isects
@@ -617,9 +619,9 @@ func Intersections(isects ...Intersection) []Intersection {
 func Hit(isects []Intersection) (Intersection, bool) {
 	res := Intersection{T: math.MaxFloat64}
 	isHit := false
-	for _, isect := range isects {
-		if isect.T <= res.T && isect.T >= 0 {
-			res = Intersection{S: isect.S, T: isect.T}
+	for i := 0; i < len(isects); i++ {
+		if isects[i].T <= res.T && isects[i].T >= 0 {
+			res = Intersection{S: isects[i].S, T: isects[i].T}
 			isHit = true
 		}
 	}
@@ -658,21 +660,21 @@ func (i Intersection) Prepare(ray Ray, isects []Intersection) IntersectionComps 
 func computeN(isect Intersection, isects []Intersection) (float64, float64) {
 	var n1, n2 float64
 	containers := []Shape{}
-	for _, i := range isects {
-		if i == isect {
+	for i := 0; i < len(isects); i++ {
+		if isects[i] == isect {
 			if len(containers) == 0 {
 				n1 = 1.0
 			} else {
 				n1 = containers[len(containers)-1].GetMat().RefractiveIndex
 			}
 		}
-		if pie.Contains(containers, i.S) {
-			containers = pie.FilterNot(containers, func(shape Shape) bool { return shape == i.S })
+		if pie.Contains(containers, isects[i].S) {
+			containers = pie.FilterNot(containers, func(shape Shape) bool { return shape == isects[i].S })
 		} else {
-			containers = append(containers, i.S)
+			containers = append(containers, isects[i].S)
 		}
 
-		if i == isect {
+		if isects[i] == isect {
 			if len(containers) == 0 {
 				n2 = 1.0
 			} else {

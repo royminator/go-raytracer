@@ -156,16 +156,16 @@ func TestTranslateRay(t *testing.T) {
 	ray := Ray{m.Point4(1, 2, 3), m.Vector4(0, 1, 0)}
 	tf := m.Trans(3, 4, 5)
 	expected := Ray{m.Point4(4, 6, 8), m.Vector4(0, 1, 0)}
-	actual := ray.Transform(tf)
-	assert.Equal(t, expected, actual)
+	ray.Transform(tf)
+	assert.Equal(t, expected, ray)
 }
 
 func TestScaleRay(t *testing.T) {
 	ray := Ray{m.Point4(1, 2, 3), m.Vector4(0, 1, 0)}
 	tf := m.Scale(2, 3, 4)
 	expected := Ray{m.Point4(2, 6, 12), m.Vector4(0, 3, 0)}
-	actual := ray.Transform(tf)
-	assert.Equal(t, expected, actual)
+	ray.Transform(tf)
+	assert.Equal(t, expected, ray)
 }
 
 func TestSpheresDefaultTransformIsIdentity(t *testing.T) {
@@ -811,7 +811,7 @@ func TestIntersectConeWithRay(t *testing.T) {
 	for _, d := range td {
 		r := Ray{
 			Origin: d.origin,
-			Dir: d.dir.Normalize(),
+			Dir:    d.dir.Normalize(),
 		}
 		xs := c.localIntersect(r)
 		assert.Len(xs, 2)
@@ -824,7 +824,7 @@ func TestIntersectConeWithARayParallelToOneOfItsHalves(t *testing.T) {
 	c := NewCone()
 	r := Ray{
 		Origin: m.Point4(0, 0, -1),
-		Dir: m.Vector4(0, 1, 1).Normalize(),
+		Dir:    m.Vector4(0, 1, 1).Normalize(),
 	}
 	xs := c.localIntersect(r)
 	assert.Len(t, xs, 1)
@@ -837,7 +837,10 @@ func TestIntersectConeEndCaps(t *testing.T) {
 	c.Max = 0.5
 	c.Closed = true
 
-	type testdata struct {origin, dir m.Vec4; count int}
+	type testdata struct {
+		origin, dir m.Vec4
+		count       int
+	}
 	td := []testdata{
 		{origin: m.Point4(0, 0, -5), dir: m.Vector4(0, 1, 0), count: 0},
 		{origin: m.Point4(0, 0, -0.25), dir: m.Vector4(0, 1, 1), count: 2},
@@ -849,7 +852,7 @@ func TestIntersectConeEndCaps(t *testing.T) {
 	for _, d := range td {
 		r := Ray{
 			Origin: d.origin,
-			Dir: d.dir.Normalize(),
+			Dir:    d.dir.Normalize(),
 		}
 		xs := c.localIntersect(r)
 		assert.Len(xs, d.count)
@@ -858,8 +861,8 @@ func TestIntersectConeEndCaps(t *testing.T) {
 
 func TestConeNormal(t *testing.T) {
 	c := NewCone()
-	
-	type testdata struct {point, normal m.Vec4}
+
+	type testdata struct{ point, normal m.Vec4 }
 	td := []testdata{
 		{point: m.Point4(0, 0, 0), normal: m.Vector4(0, 0, 0)},
 		{point: m.Point4(1, 1, 1), normal: m.Vector4(1, -math.Sqrt2, 1)},

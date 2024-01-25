@@ -61,6 +61,6 @@ func TestRenderDefaultWorld(t *testing.T) {
 	to := m.Point4(0, 0, 0)
 	up := m.Vector4(0, 1, 0)
 	cam.SetTf(m.View(from, to ,up))
-	image := cam.Render(w)
+	image := cam.Render(w, 1)
 	assert.True(t, m.Vec4{0.38066, 0.47583, 0.2855}.ApproxEqual(image.Pixels[5][5]))
 }
