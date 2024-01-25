@@ -13,6 +13,7 @@ import (
 	"roytracer/light"
 	m "roytracer/math"
 	"roytracer/mtl"
+	"roytracer/render"
 	"roytracer/shape"
 	"roytracer/world"
 )
@@ -20,14 +21,17 @@ import (
 const (
 	Size      float64 = 25
 	PosOffset         = -float64(Size) / 2.0
+	Profiling         = false
 )
 
 func main() {
-	f, _ := os.Create("cpu.pprof")
-	pprof.StartCPUProfile(f)
-	defer pprof.StopCPUProfile()
-	mf, _ := os.Create("mem.pprof")
-	defer pprof.WriteHeapProfile(mf)
+	if Profiling {
+		f, _ := os.Create("cpu.pprof")
+		pprof.StartCPUProfile(f)
+		defer pprof.StopCPUProfile()
+		mf, _ := os.Create("mem.pprof")
+		defer pprof.WriteHeapProfile(mf)
+	}
 
 	tstart := time.Now()
 	w := GenerateWorld()
@@ -37,12 +41,13 @@ func main() {
 		m.Vec4{0, -0.12 * Size, 0},
 		m.Vec4{0, 1, 0},
 	))
-	image := camera.Render(w, 3)
 
+	renderer := render.NewRenderer(&camera, w, camera.Vsize, 3)
+	renderer.RenderParallel()
 	fmt.Println("Render took:", time.Since(tstart))
 
 	writer := gfx.PPMWriter{MaxLineLength: 70}
-	writer.Write(image)
+	writer.Write(renderer.Canvas)
 	writer.SaveFile("scene.ppm")
 	fmt.Println("Total:", time.Since(tstart))
 }

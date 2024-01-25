@@ -22,7 +22,8 @@ func TestAddVec4(t *testing.T) {
 	a1 := Vec4{3, -2, 5, 1}
 	a2 := Vec4{-2, 3, 1, 0}
 	expected := Vec4{1, 1, 6, 1}
-	actual := a1.Add(a2)
+	actual := a1
+	actual.Add(a2)
 	assert.Equal(t, expected, actual)
 }
 
@@ -30,7 +31,8 @@ func TestSubPoints(t *testing.T) {
 	a1 := Point4(3, 2, 1)
 	a2 := Point4(5, 6, 7)
 	expected := Vector4(-2, -4, -6)
-	actual := a1.Sub(a2)
+	actual := a1
+	actual.Sub(a2)
 	assert.Equal(t, expected, actual)
 }
 
@@ -38,7 +40,8 @@ func TestSubVecFromPoint(t *testing.T) {
 	a1 := Point4(3, 2, 1)
 	a2 := Vector4(5, 6, 7)
 	expected := Point4(-2, -4, -6)
-	actual := a1.Sub(a2)
+	actual := a1
+	actual.Sub(a2)
 	assert.Equal(t, expected, actual)
 }
 
@@ -46,7 +49,8 @@ func TestSubVectors(t *testing.T) {
 	a1 := Vector4(3, 2, 1)
 	a2 := Vector4(5, 6, 7)
 	expected := Vector4(-2, -4, -6)
-	actual := a1.Sub(a2)
+	actual := a1
+	actual.Sub(a2)
 	assert.Equal(t, expected, actual)
 }
 
@@ -54,7 +58,8 @@ func TestSubFromZeroVec(t *testing.T) {
 	zero := Vec4With(0)
 	v := Vector4(1, -2, 3)
 	expected := Vector4(-1, 2, -3)
-	actual := zero.Sub(v)
+	actual := zero
+	actual.Sub(v)
 	assert.Equal(t, expected, actual)
 }
 
@@ -115,7 +120,8 @@ func TestVec4MagnitudeOfNormalizedVecIs1(t *testing.T) {
 }
 
 func TestDotProduct(t *testing.T) {
-	assert.Equal(t, 20.0, Vector4(1, 2, 3).Dot(Vector4(2, 3, 4)))
+	v := Vector4(1, 2, 3)
+	assert.Equal(t, 20.0, v.Dot(Vector4(2, 3, 4)))
 }
 
 func TestCrossProduct(t *testing.T) {
@@ -143,4 +149,17 @@ func TestReflectVec4OffSlantedSurface(t *testing.T) {
 	v := Vector4(0, -1, 0)
 	n := Vector4(math.Sqrt2/2.0, math.Sqrt2/2.0, 0)
 	assert.True(t, expected.ApproxEqual(v.Reflect(n)))
+}
+
+func TestVectorMulMat(t *testing.T) {
+	expected := Vec4{18, 24, 33, 1}
+	a := Mat4FromRows(
+		Vec4{1, 2, 3, 4},
+		Vec4{2, 4, 4, 2},
+		Vec4{8, 6, 4, 1},
+		Vec4{0, 0, 0, 1},
+	)
+	b := Vec4{1, 2, 3, 1}
+	b.MulMat(a)
+	assert.Equal(t, expected, b)
 }

@@ -78,9 +78,12 @@ func NewGradientPattern(a, b m.Vec4) GradientPattern {
 }
 
 func (p *GradientPattern) SampleAt(point m.Vec4) m.Vec4 {
-	dist := p.PB.B.Sub(p.PB.A)
+	dist := p.PB.B
+	dist.Sub(p.PB.A)
 	frac := point[0] - math.Floor(point[0])
-	return p.PB.A.Add(dist.Mul(frac))
+	res := p.PB.A
+	res.Add(dist.Mul(frac))
+	return res
 }
 
 func (p *GradientPattern) SetTf(tf m.Mat4) {

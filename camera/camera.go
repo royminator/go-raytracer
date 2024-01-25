@@ -2,12 +2,8 @@ package camera
 
 import (
 	"math"
-	"sync"
-
-	"roytracer/gfx"
 	m "roytracer/math"
 	"roytracer/shape"
-	"roytracer/world"
 )
 
 type Camera struct {
@@ -58,41 +54,8 @@ func (c *Camera) RayForPixel(px, py int) shape.Ray {
 	worldy := c.HalfH - yoffset
 	pixel := c.InvTf.MulVec(m.Point4(worldx, worldy, -1))
 	origin := c.InvTf.MulVec(m.Point4(0, 0, 0))
-	dir := pixel.Sub(origin).Normalize()
+	dir := pixel
+	dir.Sub(origin)
+	dir = dir.Normalize()
 	return shape.Ray{Origin: origin, Dir: dir}
-}
-
-func (c *Camera) Render(w *world.World, recDepth int) *gfx.Canvas {
-	canvas := gfx.NewCanvas(uint32(c.Hsize), uint32(c.Vsize), gfx.ColorBlack)
-	// c.renderSequential(w, canvas, depth)
-	c.renderParallel(w, canvas, recDepth)
-	return canvas
-}
-
-func (c *Camera) renderSequential(w *world.World, canvas *gfx.Canvas, depth int) {
-	for m := 0; m < c.Vsize; m++ {
-		for n := 0; n < c.Hsize; n++ {
-			c.computePixel(m, n, w, canvas, depth)
-		}
-	}
-}
-
-func (c *Camera) renderParallel(w *world.World, canvas *gfx.Canvas, depth int) {
-	var wg sync.WaitGroup
-	wg.Add(c.Vsize)
-	for m := 0; m < c.Vsize; m++ {
-		go func(m int, w *world.World, canvas *gfx.Canvas) {
-			for n := 0; n < c.Hsize; n++ {
-				c.computePixel(m, n, w, canvas, depth)
-			}
-			wg.Done()
-		}(m, w, canvas)
-	}
-	wg.Wait()
-}
-
-func (c *Camera) computePixel(m, n int, w *world.World, canvas *gfx.Canvas, depth int) {
-	ray := c.RayForPixel(n, m)
-	color := w.ColorAt(ray, depth)
-	canvas.WritePixel(uint32(n), uint32(m), color)
 }

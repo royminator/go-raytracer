@@ -31,7 +31,9 @@ func Lighting(mat mtl.Material, shape shape.Shape, light PointLight, pos, eye, n
 		return ambient
 	}
 
-	lightv := light.Pos.Sub(pos).Normalize()
+	lightv := light.Pos
+	lightv.Sub(pos)
+	lightv = lightv.Normalize()
 	lightDotNorm := lightv.Dot(normal)
 	var diffuse, specular m.Vec4
 
@@ -50,5 +52,8 @@ func Lighting(mat mtl.Material, shape shape.Shape, light PointLight, pos, eye, n
 			specular = light.Intensity.Mul(mat.Specular*factor)
 		}
 	}
-	return ambient.Add(diffuse).Add(specular)
+	res := ambient
+	res.Add(diffuse)
+	res.Add(specular)
+	return res
 }

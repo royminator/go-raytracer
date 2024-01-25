@@ -5,16 +5,17 @@ import (
 	"math"
 	"time"
 
+	"os"
 	"roytracer/camera"
 	"roytracer/gfx"
 	"roytracer/light"
 	m "roytracer/math"
 	"roytracer/mtl"
 	"roytracer/pattern"
+	"roytracer/render"
 	"roytracer/shape"
 	"roytracer/world"
 	"runtime/trace"
-	"os"
 )
 
 var (
@@ -37,11 +38,12 @@ func main() {
 		Objects: arrangeObjects(),
 	}
 	camera := setupCamera()
+	renderer := render.NewRenderer(&camera, &w, camera.Vsize, 3)
 	tstart := time.Now().UTC()
-	image := camera.Render(&w, 5)
+	renderer.RenderParallel()
 	fmt.Println("Render took:", time.Since(tstart))
 	writer := gfx.PPMWriter{MaxLineLength: 70}
-	writer.Write(image)
+	writer.Write(renderer.Canvas)
 	writer.SaveFile("scene.ppm")
 }
 

@@ -79,12 +79,14 @@ type (
 
 // ////////////// RAY ////////////////
 func (r Ray) Pos(t float64) m.Vec4 {
-	return r.Origin.Add(r.Dir.Mul(t))
+	res := r.Origin
+	res.Add(r.Dir.Mul(t))
+	return res
 }
 
 func (r *Ray) Transform(tf m.Mat4) {
-	r.Origin = tf.MulVec(r.Origin)
-	r.Dir = tf.MulVec(r.Dir)
+	r.Origin.MulMat(tf)
+	r.Dir.MulMat(tf)
 }
 
 // ////////////// SPHERE ////////////////
@@ -116,7 +118,8 @@ func (s *Sphere) Intersect(r Ray) []Intersection {
 
 func (s *Sphere) localIntersect(r Ray) []Intersection {
 	s.O.SavedRay = r
-	sphereToRay := r.Origin.Sub(m.Point4(0, 0, 0))
+	sphereToRay := r.Origin
+	sphereToRay.Sub(m.Point4(0, 0, 0))
 	a := r.Dir.Dot(r.Dir)
 	b := 2 * r.Dir.Dot(sphereToRay)
 	c := sphereToRay.Dot(sphereToRay) - 1
@@ -141,9 +144,11 @@ func (s *Sphere) localIntersect(r Ray) []Intersection {
 }
 
 func (s *Sphere) NormalAt(p m.Vec4) m.Vec4 {
-	localPoint := s.O.InvTf.MulVec(p)
-	localNormal := s.localNormalAt(localPoint)
-	nWorld := s.O.InvTf.Tpose().MulVec(localNormal)
+	// localPoint := s.O.InvTf.MulVec(p)
+	p.MulMat(s.O.InvTf)
+	nWorld := s.localNormalAt(p)
+	// nWorld := s.O.InvTf.Tpose().MulVec(localNormal)
+	nWorld.MulMat(s.O.InvTf.Tpose())
 	nWorld[3] = 0
 	return nWorld.Normalize()
 }
@@ -637,8 +642,10 @@ func (i Intersection) Prepare(ray Ray, isects []Intersection) IntersectionComps 
 		inside = true
 		normal = normal.Negate()
 	}
-	op := pos.Add(normal.Mul(m.EPSILON))
-	up := pos.Sub(normal.Mul(m.EPSILON))
+	op := pos
+	op.Add(normal.Mul(m.EPSILON))
+	up := pos
+	up.Sub(normal.Mul(m.EPSILON))
 
 	n1, n2 := computeN(i, isects)
 

@@ -49,7 +49,10 @@ func Shear(xy, xz, yx, yz, zx, zy float64) Mat4 {
 }
 
 func View(from, to, up Vec4) Mat4 {
-	fwd := to.Sub(from).Normalize()
+	fwd := to
+	fwd.Sub(from)
+	fwd = fwd.Normalize()
+
 	left := fwd.Cross(up.Normalize())
 	trueUp := left.Cross(fwd)
 	orient := Mat4FromRows(

@@ -58,9 +58,15 @@ func (w *World) ShadeHit(comps shape.IntersectionComps, remaining int) m.Vec4 {
 	mtl := comps.S.GetMat()
 	if mtl.Reflective > 0.0 && mtl.Transparency > 0.0 {
 		reflectance := comps.Schlick()
-		return surface.Add(reflected.Mul(reflectance)).Add(refracted.Mul(1.0 - reflectance))
+		res := surface
+		res.Add(reflected.Mul(reflectance))
+		res.Add(refracted.Mul(1.0 - reflectance))
+		return res
 	}
-	return surface.Add(reflected).Add(refracted)
+	res := surface
+	res.Add(reflected)
+	res.Add(refracted)
+	return res
 }
 
 func (w *World) ColorAt(ray shape.Ray, remaining int) m.Vec4 {
@@ -73,7 +79,8 @@ func (w *World) ColorAt(ray shape.Ray, remaining int) m.Vec4 {
 }
 
 func (w *World) IsShadowed(p m.Vec4) bool {
-	v := w.Light.Pos.Sub(p)
+	v := w.Light.Pos
+	v.Sub(p)
 	dist := v.Magnitude()
 	dir := v.Normalize()
 	r := shape.Ray{Origin: p, Dir: dir}
@@ -118,7 +125,8 @@ func (w *World) hasTotalInternalReflection(comps shape.IntersectionComps, remain
 		return color.Black
 	}
 	cosT := math.Sqrt(1.0 - sin2t)
-	dir := comps.Normal.Mul(nRatio*cosI - cosT).Sub(comps.Eye.Mul(nRatio))
+	dir := comps.Normal.Mul(nRatio*cosI - cosT)
+	dir.Sub(comps.Eye.Mul(nRatio))
 	refractedRay := shape.Ray{
 		Origin: comps.UnderPoint,
 		Dir:    dir,
