@@ -39,8 +39,8 @@ func (w *World) AddShape(s shape.Shape) {
 
 func (w *World) Intersect(ray shape.Ray) []shape.Intersection {
 	var isects []shape.Intersection
-	for _, obj := range w.Objects {
-		isect := obj.Intersect(ray)
+	for i := 0; i < len(w.Objects); i++ {
+		isect := w.Objects[i].Intersect(ray)
 		isects = append(isects, isect...)
 	}
 	sort.Slice(isects, func(i, j int) bool {

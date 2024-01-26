@@ -144,10 +144,8 @@ func (s *Sphere) localIntersect(r Ray) []Intersection {
 }
 
 func (s *Sphere) NormalAt(p m.Vec4) m.Vec4 {
-	// localPoint := s.O.InvTf.MulVec(p)
 	p.MulMat(s.O.InvTf)
 	nWorld := s.localNormalAt(p)
-	// nWorld := s.O.InvTf.Tpose().MulVec(localNormal)
 	nWorld.MulMat(s.O.InvTf.Tpose())
 	nWorld[3] = 0
 	return nWorld.Normalize()
