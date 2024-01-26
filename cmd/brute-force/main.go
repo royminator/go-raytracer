@@ -19,9 +19,9 @@ import (
 )
 
 const (
-	Size      float64 = 25
+	Size      float64 = 5
 	PosOffset         = -float64(Size) / 2.0
-	Profiling         = false
+	Profiling         = true
 )
 
 func main() {

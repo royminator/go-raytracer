@@ -73,7 +73,7 @@ func (lhs Vec4) ApproxEqual(rhs Vec4) bool {
 	return true
 }
 
-func (lhs *Vec4) Dot(rhs Vec4) float64 {
+func (lhs Vec4) Dot(rhs Vec4) float64 {
 	return lhs[0]*rhs[0] + lhs[1]*rhs[1] + lhs[2]*rhs[2] + lhs[3]*rhs[3]
 }
 
