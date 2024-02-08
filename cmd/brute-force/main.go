@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"math"
 	"os"
+	"runtime/debug"
 	"runtime/pprof"
 	"time"
 
@@ -19,9 +20,9 @@ import (
 )
 
 const (
-	Size      float64 = 5
+	Size      float64 = 25
 	PosOffset         = -float64(Size) / 2.0
-	Profiling         = true
+	Profiling         = false
 )
 
 func main() {
@@ -33,18 +34,21 @@ func main() {
 		defer pprof.WriteHeapProfile(mf)
 	}
 
+	debug.SetGCPercent(-1);
+
 	tstart := time.Now()
 	w := GenerateWorld()
-	camera := camera.NewCamera(1024, 512, math.Pi/3)
+	camera := camera.NewCamera(1024, 576, math.Pi/3)
 	camera.SetTf(m.View(
 		m.Vec4{1.6 * Size, 1.2 * Size, -1.6 * Size},
 		m.Vec4{0, -0.12 * Size, 0},
 		m.Vec4{0, 1, 0},
 	))
 
+	trender := time.Now()
 	renderer := render.NewRenderer(&camera, w, camera.Vsize, 3)
 	renderer.RenderParallel()
-	fmt.Println("Render took:", time.Since(tstart))
+	fmt.Printf("Render scene (%d, %d) took: %v @ %d goroutines\n", camera.Hsize, camera.Vsize, time.Since(trender), renderer.NProc)
 
 	writer := gfx.PPMWriter{MaxLineLength: 70}
 	writer.Write(renderer.Canvas)

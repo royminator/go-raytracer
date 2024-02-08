@@ -56,7 +56,7 @@ type (
 		SetTf(m.Mat4)
 		GetMat() mtl.Material
 		SetMat(mtl.Material)
-		Intersect(Ray) []Intersection
+		Intersect(Ray) ([]Intersection, int)
 		GetSavedRay() Ray
 		NormalAt(m.Vec4) m.Vec4
 		SamplePatternAt(m.Vec4) m.Vec4
@@ -111,12 +111,12 @@ func NewGlassSphere() Sphere {
 	return Sphere{O: o}
 }
 
-func (s *Sphere) Intersect(r Ray) []Intersection {
+func (s *Sphere) Intersect(r Ray) ([]Intersection, int) {
 	r.Transform(s.O.InvTf)
 	return s.localIntersect(r)
 }
 
-func (s *Sphere) localIntersect(r Ray) []Intersection {
+func (s *Sphere) localIntersect(r Ray) ([]Intersection, int) {
 	s.O.SavedRay = r
 	sphereToRay := r.Origin
 	sphereToRay.Sub(m.Point4(0, 0, 0))
@@ -125,7 +125,7 @@ func (s *Sphere) localIntersect(r Ray) []Intersection {
 	c := sphereToRay.Dot(sphereToRay) - 1
 	discriminant := b*b - 4*a*c
 	if discriminant < 0 {
-		return []Intersection{}
+		return []Intersection{}, 0
 	}
 	sqrtDiscriminant := math.Sqrt(discriminant)
 	twoA := 2 * a
@@ -135,12 +135,12 @@ func (s *Sphere) localIntersect(r Ray) []Intersection {
 		return []Intersection{
 			{S: s, T: t1},
 			{S: s, T: t2},
-		}
+		}, 2
 	}
 	return []Intersection{
 		{S: s, T: t2},
 		{S: s, T: t1},
-	}
+	}, 2
 }
 
 func (s *Sphere) NormalAt(p m.Vec4) m.Vec4 {
@@ -196,13 +196,13 @@ func (p *Plane) localNormalAt(_ m.Vec4) m.Vec4 {
 	return m.Vector4(0, 1, 0)
 }
 
-func (p *Plane) localIntersect(ray Ray) []Intersection {
+func (p *Plane) localIntersect(ray Ray) ([]Intersection, int) {
 	if math.Abs(ray.Dir[1]) < m.EPSILON {
-		return []Intersection{}
+		return []Intersection{}, 0
 	}
 
 	t := -ray.Origin[1] / ray.Dir[1]
-	return []Intersection{{T: t, S: p}}
+	return []Intersection{{T: t, S: p}}, 1
 }
 
 func (p *Plane) GetMat() mtl.Material {
@@ -226,7 +226,7 @@ func (p *Plane) GetSavedRay() Ray {
 	return p.O.SavedRay
 }
 
-func (p *Plane) Intersect(ray Ray) []Intersection {
+func (p *Plane) Intersect(ray Ray) ([]Intersection, int) {
 	ray.Transform(p.O.InvTf)
 	return p.localIntersect(ray)
 }
@@ -274,12 +274,12 @@ func (c *Cube) SetMat(mtl mtl.Material) {
 	c.O.Material = mtl
 }
 
-func (c *Cube) Intersect(ray Ray) []Intersection {
+func (c *Cube) Intersect(ray Ray) ([]Intersection, int) {
 	ray.Transform(c.O.InvTf)
 	return c.localIntersect(ray)
 }
 
-func (c *Cube) localIntersect(ray Ray) []Intersection {
+func (c *Cube) localIntersect(ray Ray) ([]Intersection, int) {
 	xtmin, xtmax := checkAxis(ray.Origin[0], ray.Dir[0])
 	ytmin, ytmax := checkAxis(ray.Origin[1], ray.Dir[1])
 	ztmin, ztmax := checkAxis(ray.Origin[2], ray.Dir[2])
@@ -288,10 +288,10 @@ func (c *Cube) localIntersect(ray Ray) []Intersection {
 	tmax := math.Min(math.Min(xtmax, ytmax), ztmax)
 
 	if tmin > tmax {
-		return []Intersection{}
+		return []Intersection{}, 0
 	}
 
-	return []Intersection{{T: tmin, S: c}, {T: tmax, S: c}}
+	return []Intersection{{T: tmin, S: c}, {T: tmax, S: c}}, 2
 }
 
 func checkAxis(origin float64, dir float64) (float64, float64) {
@@ -374,12 +374,12 @@ func (c *Cylinder) SetMat(mtl mtl.Material) {
 	c.O.Material = mtl
 }
 
-func (c *Cylinder) Intersect(ray Ray) []Intersection {
+func (c *Cylinder) Intersect(ray Ray) ([]Intersection, int) {
 	ray.Transform(c.O.InvTf)
 	return c.localIntersect(ray)
 }
 
-func (cyl *Cylinder) localIntersect(ray Ray) []Intersection {
+func (cyl *Cylinder) localIntersect(ray Ray) ([]Intersection, int) {
 	a := ray.Dir[0]*ray.Dir[0] + ray.Dir[2]*ray.Dir[2]
 
 	var xs []Intersection
@@ -389,7 +389,7 @@ func (cyl *Cylinder) localIntersect(ray Ray) []Intersection {
 	}
 
 	cyl.intersectCaps(ray, &xs)
-	return xs
+	return xs, len(xs)
 }
 
 func (cyl *Cylinder) intersectWalls(ray Ray, xs *[]Intersection, a float64) {
@@ -456,10 +456,10 @@ func (c *Cylinder) NormalAt(point m.Vec4) m.Vec4 {
 
 func (c *Cylinder) localNormalAt(point m.Vec4) m.Vec4 {
 	dist := point[0]*point[0] + point[2]*point[2]
-	if dist < 1 && point[1] >= (c.Max - m.EPSILON) {
+	if dist < 1 && point[1] >= (c.Max-m.EPSILON) {
 		return m.Vector4(0, 1, 0)
 	}
-	if dist < 1 && point[1] <= (c.Min + m.EPSILON) {
+	if dist < 1 && point[1] <= (c.Min+m.EPSILON) {
 		return m.Vector4(0, -1, 0)
 	}
 	return m.Vector4(point[0], 0, point[2])
@@ -503,32 +503,31 @@ func (c *Cone) SetMat(mtl mtl.Material) {
 	c.O.Material = mtl
 }
 
-func (c *Cone) Intersect(ray Ray) []Intersection {
+func (c *Cone) Intersect(ray Ray) ([]Intersection, int) {
 	ray.Transform(c.O.InvTf)
 	return c.localIntersect(ray)
 }
 
-func (cone *Cone) localIntersect(ray Ray) []Intersection {
+func (cone *Cone) localIntersect(ray Ray) ([]Intersection, int) {
 	a := ray.Dir[0]*ray.Dir[0] - ray.Dir[1]*ray.Dir[1] + ray.Dir[2]*ray.Dir[2]
 
 	b := 2*ray.Origin[0]*ray.Dir[0] - 2*ray.Origin[1]*ray.Dir[1] + 2*ray.Origin[2]*ray.Dir[2]
 
 	c := ray.Origin[0]*ray.Origin[0] - ray.Origin[1]*ray.Origin[1] + ray.Origin[2]*ray.Origin[2]
 
-
 	disc := b*b - 4*a*c
 
 	var xs []Intersection
 	if disc < 0.0 {
-		return xs
+		return xs, 0
 	}
 
 	if m.EqApprox(a, 0.0) && m.EqApprox(b, 0.0) {
-		return []Intersection{}
+		return []Intersection{}, 0
 	}
 
 	if m.EqApprox(a, 0.0) && !m.EqApprox(b, 0.0) {
-		xs = append(xs, Intersection{T: -c/(2*b), S: cone})
+		xs = append(xs, Intersection{T: -c / (2 * b), S: cone})
 	}
 
 	t0 := (-b - math.Sqrt(disc)) / (2 * a)
@@ -549,7 +548,7 @@ func (cone *Cone) localIntersect(ray Ray) []Intersection {
 	}
 
 	cone.intersectCaps(ray, &xs)
-	return xs
+	return xs, len(xs)
 }
 
 func (c *Cone) intersectCaps(ray Ray, isects *[]Intersection) {
@@ -588,14 +587,14 @@ func (c *Cone) NormalAt(point m.Vec4) m.Vec4 {
 
 func (c *Cone) localNormalAt(point m.Vec4) m.Vec4 {
 	dist := point[0]*point[0] + point[2]*point[2]
-	if dist < 1 && point[1] >= (c.Max - m.EPSILON) {
+	if dist < 1 && point[1] >= (c.Max-m.EPSILON) {
 		return m.Vector4(0, 1, 0)
 	}
-	if dist < 1 && point[1] <= (c.Min + m.EPSILON) {
+	if dist < 1 && point[1] <= (c.Min+m.EPSILON) {
 		return m.Vector4(0, -1, 0)
 	}
 
-	y := math.Sqrt(point[0]*point[0]+point[2]*point[2])
+	y := math.Sqrt(point[0]*point[0] + point[2]*point[2])
 	if point[1] > 0.0 {
 		y = -y
 	}
@@ -662,8 +661,7 @@ func (i Intersection) Prepare(ray Ray, isects []Intersection) IntersectionComps 
 	}
 }
 
-func computeN(isect Intersection, isects []Intersection) (float64, float64) {
-	var n1, n2 float64
+func computeN(isect Intersection, isects []Intersection) (n1 float64, n2 float64) {
 	containers := []Shape{}
 	for i := 0; i < len(isects); i++ {
 		if isects[i] == isect {
@@ -688,7 +686,7 @@ func computeN(isect Intersection, isects []Intersection) (float64, float64) {
 			break
 		}
 	}
-	return n1, n2
+	return
 }
 
 // ////////////// SHAPE ////////////////

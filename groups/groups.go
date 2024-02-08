@@ -43,7 +43,8 @@ func (g *Group) Contains(s shape.Shape) bool {
 func (g *Group) localIntersect(r shape.Ray) []shape.Intersection {
 	xs := []shape.Intersection{}
 	for _, se := range g.Shapes {
-		xs = append(xs, se.Shape.Intersect(r)...)
+		isects, _ := se.Shape.Intersect(r)
+		xs = append(xs, isects...)
 	}
 	sort.Slice(xs, func(i, j int) bool { return xs[i].T < xs[j].T })
 	return xs

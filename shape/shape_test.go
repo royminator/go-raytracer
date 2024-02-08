@@ -33,7 +33,7 @@ func TestComputePointOnRay(t *testing.T) {
 func TestSphereIntersection(t *testing.T) {
 	ray := Ray{m.Point4(0, 0, -5), m.Vector4(0, 0, 1)}
 	s := NewSphere()
-	isect := s.Intersect(ray)
+	isect, _ := s.Intersect(ray)
 	assert := assert.New(t)
 	assert.Equal(2, len(isect))
 	assert.Equal(4.0, isect[0].T)
@@ -43,7 +43,7 @@ func TestSphereIntersection(t *testing.T) {
 func TestSphereIntersectionAtTangent(t *testing.T) {
 	ray := Ray{m.Point4(0, 1, -5), m.Vector4(0, 0, 1)}
 	s := NewSphere()
-	isect := s.Intersect(ray)
+	isect, _ := s.Intersect(ray)
 	assert := assert.New(t)
 	assert.Equal(2, len(isect))
 	assert.Equal(5.0, isect[0].T)
@@ -53,14 +53,14 @@ func TestSphereIntersectionAtTangent(t *testing.T) {
 func TestSphereIntersectionRayMisses(t *testing.T) {
 	ray := Ray{m.Point4(0, 2, -5), m.Vector4(0, 0, 1)}
 	s := NewSphere()
-	isect := s.Intersect(ray)
+	isect, _ := s.Intersect(ray)
 	assert.Equal(t, 0, len(isect))
 }
 
 func TestSphereIntersectionRayBehindSphere(t *testing.T) {
 	ray := Ray{m.Point4(0, 0, 5), m.Vector4(0, 0, 1)}
 	s := NewSphere()
-	isect := s.Intersect(ray)
+	isect, _ := s.Intersect(ray)
 	assert := assert.New(t)
 	assert.Equal(2, len(isect))
 	assert.Equal(-6.0, isect[0].T)
@@ -70,7 +70,7 @@ func TestSphereIntersectionRayBehindSphere(t *testing.T) {
 func TestSphereIntersectRayInsideSphere(t *testing.T) {
 	ray := Ray{m.Point4(0, 0, 0), m.Vector4(0, 0, 1)}
 	s := NewSphere()
-	isect := s.Intersect(ray)
+	isect, _ := s.Intersect(ray)
 	assert := assert.New(t)
 	assert.Equal(2, len(isect))
 	assert.Equal(-1.0, isect[0].T)
@@ -97,7 +97,7 @@ func TestInterectionAggregateTValues(t *testing.T) {
 func TestIntersectRaySetsObject(t *testing.T) {
 	s := NewSphere()
 	ray := Ray{m.Point4(0, 0, -5), m.Vector4(0, 0, 1)}
-	isects := s.Intersect(ray)
+	isects, _ := s.Intersect(ray)
 	assert.Equal(t, 2, len(isects))
 	assert.Equal(t, &s, isects[0].S)
 	assert.Equal(t, &s, isects[1].S)
@@ -358,21 +358,21 @@ func TestNormalOfPlaneIsConstantEverywhere(t *testing.T) {
 func TestIntersectPlaneAndParallelRay(t *testing.T) {
 	p := NewPlane()
 	r := Ray{Origin: m.Point4(0, 10, 0), Dir: m.Vector4(0, 0, 1)}
-	isects := p.localIntersect(r)
+	isects, _ := p.localIntersect(r)
 	assert.Empty(t, isects)
 }
 
 func TestIntersectPlaneAndCoplanarRay(t *testing.T) {
 	p := NewPlane()
 	r := Ray{Origin: m.Point4(0, 0, 0), Dir: m.Vector4(0, 0, 1)}
-	isects := p.localIntersect(r)
+	isects, _ := p.localIntersect(r)
 	assert.Empty(t, isects)
 }
 
 func TestIntersectPlaneWhenRayFromAbove(t *testing.T) {
 	p := NewPlane()
 	r := Ray{Origin: m.Point4(0, 1, 0), Dir: m.Vector4(0, -1, 0)}
-	isects := p.localIntersect(r)
+	isects, _ := p.localIntersect(r)
 	assert := assert.New(t)
 	assert.Len(isects, 1)
 	assert.Equal(1.0, isects[0].T)
@@ -382,7 +382,7 @@ func TestIntersectPlaneWhenRayFromAbove(t *testing.T) {
 func TestIntersectPlaneWhenRayFromBelow(t *testing.T) {
 	p := NewPlane()
 	r := Ray{Origin: m.Point4(0, -1, 0), Dir: m.Vector4(0, 1, 0)}
-	isects := p.localIntersect(r)
+	isects, _ := p.localIntersect(r)
 	assert := assert.New(t)
 	assert.Len(isects, 1)
 	assert.Equal(1.0, isects[0].T)
@@ -584,7 +584,7 @@ func TestRayIntersectsCube(t *testing.T) {
 	}
 	assert := assert.New(t)
 	for _, d := range td {
-		xs := c.localIntersect(d.ray)
+		xs, _ := c.localIntersect(d.ray)
 		assert.Equal(2, len(xs))
 		assert.Equal(d.t1, xs[0].T)
 		assert.Equal(d.t2, xs[1].T)
@@ -606,7 +606,7 @@ func TestRayMissesCube(t *testing.T) {
 	assert := assert.New(t)
 
 	for _, d := range td {
-		xs := c.localIntersect(d)
+		xs, _ := c.localIntersect(d)
 		assert.Len(xs, 0)
 	}
 }
@@ -648,7 +648,7 @@ func TestRayMissesCylinder(t *testing.T) {
 	for _, d := range testData {
 		r := d
 		r.Dir = r.Dir.Normalize()
-		xs := c.localIntersect(r)
+		xs, _ := c.localIntersect(r)
 		assert.Len(xs, 0)
 	}
 }
@@ -673,7 +673,7 @@ func TestRayHitsCylinder(t *testing.T) {
 			Origin: d.origin,
 			Dir:    d.dir.Normalize(),
 		}
-		xs := c.localIntersect(r)
+		xs, _ := c.localIntersect(r)
 		assert.Len(xs, 2)
 		assert.True(m.EqApprox(d.t0, xs[0].T))
 		assert.True(m.EqApprox(d.t1, xs[1].T))
@@ -729,7 +729,7 @@ func TestIntersectingAConstrainedCylinder(t *testing.T) {
 			Origin: d.point,
 			Dir:    d.dir.Normalize(),
 		}
-		xs := c.localIntersect(r)
+		xs, _ := c.localIntersect(r)
 		assert.Len(xs, d.count)
 	}
 }
@@ -764,7 +764,7 @@ func TestIntersectingCapsOfCylinders(t *testing.T) {
 			Origin: d.point,
 			Dir:    d.dir.Normalize(),
 		}
-		xs := c.localIntersect(r)
+		xs, _ := c.localIntersect(r)
 		assert.Len(xs, d.count)
 	}
 }
@@ -813,7 +813,7 @@ func TestIntersectConeWithRay(t *testing.T) {
 			Origin: d.origin,
 			Dir:    d.dir.Normalize(),
 		}
-		xs := c.localIntersect(r)
+		xs, _ := c.localIntersect(r)
 		assert.Len(xs, 2)
 		assert.True(m.EqApprox(d.t0, xs[0].T))
 		assert.True(m.EqApprox(d.t1, xs[1].T))
@@ -826,7 +826,7 @@ func TestIntersectConeWithARayParallelToOneOfItsHalves(t *testing.T) {
 		Origin: m.Point4(0, 0, -1),
 		Dir:    m.Vector4(0, 1, 1).Normalize(),
 	}
-	xs := c.localIntersect(r)
+	xs, _ := c.localIntersect(r)
 	assert.Len(t, xs, 1)
 	assert.True(t, m.EqApprox(xs[0].T, 0.35355))
 }
@@ -854,7 +854,7 @@ func TestIntersectConeEndCaps(t *testing.T) {
 			Origin: d.origin,
 			Dir:    d.dir.Normalize(),
 		}
-		xs := c.localIntersect(r)
+		xs, _ := c.localIntersect(r)
 		assert.Len(xs, d.count)
 	}
 }

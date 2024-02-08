@@ -47,6 +47,25 @@ func (r *Renderer) RenderParallel() {
 	wg.Wait()
 }
 
+func (r *Renderer) RenderHorizontalChunks(nChunks int) {
+	var wg sync.WaitGroup
+	wg.Add(nChunks)
+	chunkSize := r.Camera.Vsize / nChunks
+	for i := 0; i < nChunks; i++ {
+		startRow := i*chunkSize
+		endRow := startRow+chunkSize
+		go func(startRow, endRow int) {
+			for m := startRow; m < endRow; m++ {
+				for n := 0; n < r.Camera.Hsize; n++ {
+					r.computePixel(m, n)
+				}
+			}
+			wg.Done()
+		}(startRow, endRow)
+	}
+	wg.Wait()
+}
+
 func (r *Renderer) computePixel(m, n int) {
 	ray := r.Camera.RayForPixel(n, m)
 	color := r.World.ColorAt(ray, r.RecursiveDepth)

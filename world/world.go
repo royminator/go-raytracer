@@ -38,10 +38,17 @@ func (w *World) AddShape(s shape.Shape) {
 }
 
 func (w *World) Intersect(ray shape.Ray) []shape.Intersection {
+	// isects := make([]shape.Intersection, len(w.Objects)*2)
 	var isects []shape.Intersection
 	for i := 0; i < len(w.Objects); i++ {
-		isect := w.Objects[i].Intersect(ray)
-		isects = append(isects, isect...)
+		if isect, nIsects := w.Objects[i].Intersect(ray); nIsects > 0 {
+			/*
+			for j := 0; j < nIsects; j++ {
+				isects[i+j] = isect[j]
+			}
+			*/
+			isects = append(isects, isect...)
+		}
 	}
 	sort.Slice(isects, func(i, j int) bool {
 		return isects[i].T < isects[j].T
@@ -49,7 +56,7 @@ func (w *World) Intersect(ray shape.Ray) []shape.Intersection {
 	return isects
 }
 
-func (w *World) ShadeHit(comps shape.IntersectionComps, remaining int) m.Vec4 {
+func (w *World) ShadeHit(comps shape.IntersectionComps, remaining int) (res m.Vec4) {
 	shadowed := w.IsShadowed(comps.OverPoint)
 	surface := light.Lighting(comps.S.GetMat(), comps.S, w.Light, comps.OverPoint,
 		comps.Eye, comps.Normal, shadowed)
@@ -58,12 +65,12 @@ func (w *World) ShadeHit(comps shape.IntersectionComps, remaining int) m.Vec4 {
 	mtl := comps.S.GetMat()
 	if mtl.Reflective > 0.0 && mtl.Transparency > 0.0 {
 		reflectance := comps.Schlick()
-		res := surface
+		res = surface
 		res.Add(reflected.Mul(reflectance))
 		res.Add(refracted.Mul(1.0 - reflectance))
-		return res
+		return
 	}
-	res := surface
+	res = surface
 	res.Add(reflected)
 	res.Add(refracted)
 	return res
