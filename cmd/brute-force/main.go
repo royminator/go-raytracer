@@ -17,12 +17,13 @@ import (
 	"roytracer/render"
 	"roytracer/shape"
 	"roytracer/world"
+	"testing"
 )
 
 const (
-	Size      float64 = 25
+	Size      float64 = 5
 	PosOffset         = -float64(Size) / 2.0
-	Profiling         = false
+	Profiling         = true
 )
 
 func main() {
@@ -34,8 +35,11 @@ func main() {
 		defer pprof.WriteHeapProfile(mf)
 	}
 
-	debug.SetGCPercent(-1);
+	debug.SetGCPercent(-1)
+	fmt.Println("allocs:", int(testing.AllocsPerRun(1, func() { runBruteForce() })))
+}
 
+func runBruteForce() {
 	tstart := time.Now()
 	w := GenerateWorld()
 	camera := camera.NewCamera(1024, 576, math.Pi/3)

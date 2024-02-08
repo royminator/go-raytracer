@@ -2,7 +2,6 @@ package world
 
 import (
 	"math"
-	"sort"
 
 	"roytracer/color"
 	"roytracer/light"
@@ -38,22 +37,28 @@ func (w *World) AddShape(s shape.Shape) {
 }
 
 func (w *World) Intersect(ray shape.Ray) []shape.Intersection {
-	// isects := make([]shape.Intersection, len(w.Objects)*2)
 	var isects []shape.Intersection
 	for i := 0; i < len(w.Objects); i++ {
 		if isect, nIsects := w.Objects[i].Intersect(ray); nIsects > 0 {
-			/*
-			for j := 0; j < nIsects; j++ {
-				isects[i+j] = isect[j]
-			}
-			*/
 			isects = append(isects, isect...)
 		}
 	}
-	sort.Slice(isects, func(i, j int) bool {
-		return isects[i].T < isects[j].T
-	})
+	insertionSort(&isects)
 	return isects
+}
+
+func insertionSort(isects *[]shape.Intersection) {
+	n := len(*isects)
+	for i := 1; i < n; i++ {
+		key := (*isects)[i]
+		j := i - 1
+
+		for j >= 0 && (*isects)[j].T > key.T {
+			(*isects)[j+1] = (*isects)[j]
+			j--
+		}
+		(*isects)[j+1] = key
+	}
 }
 
 func (w *World) ShadeHit(comps shape.IntersectionComps, remaining int) (res m.Vec4) {
