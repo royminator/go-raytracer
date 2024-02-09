@@ -95,11 +95,11 @@ func (lhs Vec4) MulElem(rhs Vec4) Vec4 {
 }
 
 func (vec *Vec4) MulMat(m Mat4) {
-	v := *vec
-	vec[0] = m[0]*v[0]+m[1]*v[1]+m[2]*v[2]+m[3]*v[3]
-	vec[1] = m[4]*v[0]+m[5]*v[1]+m[6]*v[2]+m[7]*v[3]
-	vec[2] = m[8]*v[0]+m[9]*v[1]+m[10]*v[2]+m[11]*v[3]
-	vec[3] = m[12]*v[0]+m[13]*v[1]+m[14]*v[2]+m[15]*v[3]
+	v0, v1, v2, v3 := vec[0], vec[1], vec[2], vec[3]
+	vec[0] = m[0]*v0+m[1]*v1+m[2]*v2+m[3]*v3
+	vec[1] = m[4]*v0+m[5]*v1+m[6]*v2+m[7]*v3
+	vec[2] = m[8]*v0+m[9]*v1+m[10]*v2+m[11]*v3
+	vec[3] = m[12]*v0+m[13]*v1+m[14]*v2+m[15]*v3
 }
 
 func (v Vec4) Reflect(n Vec4) Vec4 {

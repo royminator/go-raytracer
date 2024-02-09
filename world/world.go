@@ -39,8 +39,8 @@ func (w *World) AddShape(s shape.Shape) {
 func (w *World) Intersect(ray shape.Ray) []shape.Intersection {
 	var isects []shape.Intersection
 	for i := 0; i < len(w.Objects); i++ {
-		if isect, nIsects := w.Objects[i].Intersect(ray); nIsects > 0 {
-			isects = append(isects, isect...)
+		if xs, nIsects := w.Objects[i].Intersect(ray); nIsects > 0 {
+			isects = append(isects, xs...)
 		}
 	}
 	insertionSort(&isects)

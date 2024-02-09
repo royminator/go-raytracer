@@ -17,13 +17,12 @@ import (
 	"roytracer/render"
 	"roytracer/shape"
 	"roytracer/world"
-	"testing"
 )
 
 const (
-	Size      float64 = 5
+	Size      float64 = 25
 	PosOffset         = -float64(Size) / 2.0
-	Profiling         = true
+	Profiling         = false
 )
 
 func main() {
@@ -36,7 +35,8 @@ func main() {
 	}
 
 	debug.SetGCPercent(-1)
-	fmt.Println("allocs:", int(testing.AllocsPerRun(1, func() { runBruteForce() })))
+	runBruteForce()
+	// fmt.Println("allocs:", int(testing.AllocsPerRun(1, func() { runBruteForce() })))
 }
 
 func runBruteForce() {

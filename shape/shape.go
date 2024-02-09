@@ -125,22 +125,21 @@ func (s *Sphere) localIntersect(r Ray) ([]Intersection, int) {
 	c := sphereToRay.Dot(sphereToRay) - 1
 	discriminant := b*b - 4*a*c
 	if discriminant < 0 {
-		return []Intersection{}, 0
+		return nil, 0
 	}
 	sqrtDiscriminant := math.Sqrt(discriminant)
 	twoA := 2 * a
 	t1 := (-b - sqrtDiscriminant) / twoA
 	t2 := (-b + sqrtDiscriminant) / twoA
+	isects := make([]Intersection, 2)
 	if t1 < t2 {
-		return []Intersection{
-			{S: s, T: t1},
-			{S: s, T: t2},
-		}, 2
+		isects[0] = Intersection{S: s, T: t1}
+		isects[1] = Intersection{S: s, T: t2}
+		return isects, 2
 	}
-	return []Intersection{
-		{S: s, T: t2},
-		{S: s, T: t1},
-	}, 2
+	isects[0] = Intersection{S: s, T: t2}
+	isects[1] = Intersection{S: s, T: t1}
+	return isects, 2
 }
 
 func (s *Sphere) NormalAt(p m.Vec4) m.Vec4 {
