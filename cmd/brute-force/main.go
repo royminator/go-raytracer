@@ -3,9 +3,10 @@ package main
 import (
 	"fmt"
 	"math"
-	"os"
+	"net/http"
+	_ "net/http/pprof"
+	"runtime"
 	"runtime/debug"
-	"runtime/pprof"
 	"time"
 
 	"roytracer/camera"
@@ -20,22 +21,21 @@ import (
 )
 
 const (
-	Size      float64 = 25
+	Size      float64 = 5
 	PosOffset         = -float64(Size) / 2.0
 	Profiling         = false
 )
 
 func main() {
+	runBruteForce()
+
 	if Profiling {
-		f, _ := os.Create("cpu.pprof")
-		pprof.StartCPUProfile(f)
-		defer pprof.StopCPUProfile()
-		mf, _ := os.Create("mem.pprof")
-		defer pprof.WriteHeapProfile(mf)
+		runtime.SetBlockProfileRate(1)
+		runtime.SetMutexProfileFraction(1)
+		http.ListenAndServe("localhost:6060", nil)
 	}
 
 	debug.SetGCPercent(-1)
-	runBruteForce()
 	// fmt.Println("allocs:", int(testing.AllocsPerRun(1, func() { runBruteForce() })))
 }
 
